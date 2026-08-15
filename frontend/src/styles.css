@@ -6,6 +6,221 @@ body,
 
 body {
   margin: 0;
+  background: #f5f7fb;
+  color: #182230;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+.app-shell {
+  --workspace-ink: #182230;
+  --workspace-muted: #748095;
+}
+
+.app-header {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(18px);
+  border-bottom: 1px solid #e8ecf3;
+}
+
+.app-navbar {
+  background: #fbfcfe;
+  border-right: 1px solid #e8ecf3;
+}
+
+.app-shell .mantine-AppShell-main {
+  min-height: 100%;
+  background: radial-gradient(circle at 90% 0%, rgba(224, 231, 255, 0.55), transparent 32rem), #f5f7fb;
+}
+
+.brand-wordmark {
+  letter-spacing: -0.03em;
+}
+
+.user-chip {
+  padding: 4px 4px 4px 8px;
+  border: 1px solid #e8ecf3;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.nav-item {
+  border-radius: 12px;
+  padding: 11px 12px;
+  transition: background-color 120ms ease, transform 120ms ease;
+}
+
+.nav-item:hover {
+  transform: translateX(2px);
+}
+
+.nav-item[data-active="true"] {
+  background: linear-gradient(100deg, #e7eaff, #f0f8ff);
+  color: #3949ab;
+}
+
+.nav-item .mantine-NavLink-description {
+  color: #8993a5;
+  margin-top: 2px;
+}
+
+.sidebar-footer {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 13px 12px;
+  border: 1px solid #e8ecf3;
+  border-radius: 12px;
+  background: #f6f8fc;
+  color: #58667c;
+}
+
+.page-title {
+  letter-spacing: -0.045em;
+  font-size: clamp(2rem, 3vw, 2.75rem);
+}
+
+.surface-card,
+.metric-card,
+.filter-bar,
+.dropzone-card {
+  border-color: #e6eaf1;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 7px 24px rgba(31, 45, 75, 0.035);
+}
+
+.metric-card {
+  min-height: 145px;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 13px 32px rgba(31, 45, 75, 0.09);
+}
+
+.metric-value {
+  letter-spacing: -0.05em;
+}
+
+.filter-bar {
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0.96), rgba(245, 247, 255, 0.95));
+}
+
+.month-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 13px;
+  border: 1px solid #e1e7f0;
+  border-radius: 10px;
+  background: #fff;
+  color: #44516a;
+}
+
+.month-tabs {
+  padding: 4px;
+  border: 1px solid #e5e9f0;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.month-tab {
+  padding: 6px 10px;
+  border-radius: 7px;
+  color: #7b8799;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.month-tab.active {
+  background: #e7eaff;
+  color: #3949ab;
+}
+
+.insight-banner {
+  border-color: #d8e8f7;
+  background: linear-gradient(120deg, #eff7ff, #f4f0ff);
+}
+
+.table-card {
+  overflow: hidden;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.table-scroll table thead th {
+  background: #fbfcfe;
+  color: #7e899d;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.worklog-table tbody tr td {
+  vertical-align: middle;
+}
+
+.dropzone-shell {
+  border: 1px dashed #b7c2e9;
+  border-radius: 14px;
+  background: linear-gradient(120deg, #f8f9ff, #f2fbff);
+}
+
+.folder-tree-item {
+  border-radius: 9px;
+}
+
+.folder-tree-item[data-active="true"] {
+  background: #e9edff;
+  color: #3949ab;
+}
+
+.recent-file {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #edf0f5;
+  border-radius: 10px;
+  background: #fbfcfe;
+}
+
+.settings-tabs .mantine-Tabs-list {
+  gap: 6px;
+}
+
+.settings-tabs .mantine-Tabs-tab {
+  border: 1px solid transparent;
+  color: #69768b;
+  font-weight: 700;
+}
+
+.settings-tabs .mantine-Tabs-tab[data-active="true"] {
+  border-color: #dce2ff;
+  background: #e9edff;
+  color: #3949ab;
+}
+
+@media (max-width: 48em) {
+  .user-chip-copy {
+    display: none;
+  }
+
+  .page-title {
+    font-size: 2rem;
+  }
+
+  .app-shell .mantine-AppShell-main {
+    padding: 18px;
+  }
 }
 
 /* Worklog day-grid affordances. Kept here rather than inline so the shading

@@ -225,6 +225,7 @@ __marimo__/
 frontend/node_modules/
 frontend/.env
 frontend/*.local
+frontend/*.tsbuildinfo
 
 # Runtime data the app writes
 /storage/

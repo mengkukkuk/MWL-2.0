@@ -3,12 +3,13 @@ import react from '@vitejs/plugin-react';
 
 // The Flask origin. Everything is served same-origin in production; in dev the
 // proxy below makes the browser believe that is true here too.
-const BACKEND = process.env.VITE_BACKEND_ORIGIN ?? 'http://127.0.0.1:5123';
+const BACKEND = process.env.VITE_BACKEND_ORIGIN ?? 'http://127.0.0.1:5112';
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [react()],
-  // Flask serves the bundle from /static, so every asset URL must be prefixed.
-  base: '/static/',
+  // Flask serves the production bundle from /static; Vite needs root-relative
+  // module URLs in dev so BrowserRouter can own /login and the app routes.
+  base: command === 'build' ? '/static/' : '/',
   build: {
     outDir: '../static',
     emptyOutDir: true,
@@ -37,4 +38,4 @@ export default defineConfig({
       '/logout': { target: BACKEND, changeOrigin: true },
     },
   },
-});
+}));
