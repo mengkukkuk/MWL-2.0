@@ -33,23 +33,25 @@ import { PageHeader } from '../components/PageHeader';
 import { MetricCard } from '../components/MetricCard';
 import { formatHours, recentMonths } from '../utils/dates';
 import { useNavigate } from 'react-router';
+import { useWorkspace } from '../workspace/WorkspaceContext';
 
 export function DashboardPage() {
   const { user } = useAuth();
+  const { selectedMemberId } = useWorkspace();
   const navigate = useNavigate();
   const [selectedMonth, setSelectedMonth] = useState(dayjs().format('YYYY-MM'));
   const [year, month] = selectedMonth.split('-').map(Number);
   const months = recentMonths(12);
 
   const dashboardQuery = useQuery({
-    queryKey: ['dashboard', user?.member_id, year],
-    queryFn: () => worklogsApi.dashboard(user!.member_id, year),
-    enabled: !!user,
+    queryKey: ['dashboard', selectedMemberId, year],
+    queryFn: () => worklogsApi.dashboard(selectedMemberId!, year),
+    enabled: !!selectedMemberId,
   });
   const worklogQuery = useQuery({
-    queryKey: ['worklogs', user?.member_id, selectedMonth],
-    queryFn: () => worklogsApi.list(user!.member_id, year, month),
-    enabled: !!user,
+    queryKey: ['worklogs', selectedMemberId, selectedMonth],
+    queryFn: () => worklogsApi.list(selectedMemberId!, year, month),
+    enabled: !!selectedMemberId,
   });
 
   const dashboard = dashboardQuery.data;

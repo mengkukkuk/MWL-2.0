@@ -18,13 +18,13 @@ import {
 import { IconCheck, IconClock, IconInfoCircle, IconPlus, IconRefresh, IconTrash, IconX } from '@tabler/icons-react';
 import dayjs from 'dayjs';
 
-import { useAuth } from '../auth/AuthContext';
 import { worklogsApi } from '../api/worklogs';
 import { projectsApi } from '../api/projects';
 import { PageHeader } from '../components/PageHeader';
 import type { Worklog, WorklogStatus, WorklogWrite } from '../types/api';
 import { formatHours, recentMonths } from '../utils/dates';
 import { notifyError, notifySuccess } from '../utils/notify';
+import { useWorkspace } from '../workspace/WorkspaceContext';
 
 type EditableWorklog = Worklog & { dirty?: boolean; isNew?: boolean };
 
@@ -49,13 +49,13 @@ function toPayload(row: EditableWorklog, descriptions: { Projectcode: string; De
 }
 
 export function WorklogPage() {
-  const { user } = useAuth();
+  const { selectedMemberId } = useWorkspace();
   const queryClient = useQueryClient();
   const [selectedMonth, setSelectedMonth] = useState(dayjs().format('YYYY-MM'));
   const [year, month] = selectedMonth.split('-').map(Number);
   const [rows, setRows] = useState<EditableWorklog[]>([]);
   const months = recentMonths(24);
-  const worklogsQuery = useQuery({ queryKey: ['worklogs', user?.member_id, selectedMonth], queryFn: () => worklogsApi.list(user!.member_id, year, month), enabled: !!user });
+  const worklogsQuery = useQuery({ queryKey: ['worklogs', selectedMemberId, selectedMonth], queryFn: () => worklogsApi.list(selectedMemberId!, year, month), enabled: !!selectedMemberId });
   const holidaysQuery = useQuery({ queryKey: ['holidays', year, month], queryFn: () => worklogsApi.holidays(year, month) });
   const descriptionsQuery = useQuery({ queryKey: ['project-descriptions'], queryFn: projectsApi.descriptions });
   const descriptions = descriptionsQuery.data ?? [];
@@ -73,7 +73,7 @@ export function WorklogPage() {
     },
     onSuccess: () => {
       notifySuccess('Worklog saved');
-      void queryClient.invalidateQueries({ queryKey: ['worklogs', user?.member_id, selectedMonth] });
+      void queryClient.invalidateQueries({ queryKey: ['worklogs', selectedMemberId, selectedMonth] });
     },
     onError: (error) => notifyError(error, 'Unable to save this worklog.'),
   });
@@ -82,15 +82,16 @@ export function WorklogPage() {
       if (!row.isNew) await worklogsApi.remove(row.id);
       return undefined;
     },
-    onSuccess: () => { notifySuccess('Worklog removed'); void queryClient.invalidateQueries({ queryKey: ['worklogs', user?.member_id, selectedMonth] }); },
+    onSuccess: () => { notifySuccess('Worklog removed'); void queryClient.invalidateQueries({ queryKey: ['worklogs', selectedMemberId, selectedMonth] }); },
     onError: (error) => notifyError(error, 'Unable to remove this worklog.'),
   });
 
   const updateRow = (id: number, patch: Partial<EditableWorklog>) => setRows((current) => current.map((row) => row.id === id ? { ...row, ...patch, dirty: true } : row));
   const addRow = () => {
+    if (!selectedMemberId) return;
     const firstProject = descriptions[0]?.Description ?? '';
     const date = `${selectedMonth}-01`;
-    setRows((current) => [{ id: -Date.now(), member_id: user!.member_id, log_date: date, project: firstProject, task: '', start_time: '09:00', end_time: '17:30', hours: null, regular_hours: null, OT1: null, OT1_5: null, OT3: null, status: 'In Progress', note: '', IsEditRow: 1, is_allowance: 0, project_description: firstProject, isNew: true, dirty: true }, ...current]);
+    setRows((current) => [{ id: -Date.now(), member_id: selectedMemberId, log_date: date, project: firstProject, task: '', start_time: '09:00', end_time: '17:30', hours: null, regular_hours: null, OT1: null, OT1_5: null, OT3: null, status: 'In Progress', note: '', IsEditRow: 1, is_allowance: 0, project_description: firstProject, isNew: true, dirty: true }, ...current]);
   };
   const removeRow = (row: EditableWorklog) => {
     if (row.isNew) setRows((current) => current.filter((item) => item.id !== row.id));
@@ -118,15 +119,16 @@ export function WorklogPage() {
                 const weekend = date.day() === 0 || date.day() === 6;
                 const holiday = holidaySet.has(row.log_date);
                 const className = `${weekend ? 'row-weekend ' : ''}${holiday ? 'row-holiday ' : ''}${row.dirty ? 'row-dirty' : ''}`;
+                const rowEditable = row.isNew || row.IsEditRow === 1;
                 return <Table.Tr key={row.id} className={className}>
                   <Table.Td><Text size="sm" fw={700}>{date.format('DD MMM')}</Text><Text size="xs" c="dimmed">{date.format('ddd')}</Text></Table.Td>
-                  <Table.Td><Select size="xs" value={projectValue(row, descriptions) || null} onChange={(value) => updateRow(row.id, { project: value ?? '' })} data={descriptions.map((item) => ({ value: item.Description, label: item.Description }))} placeholder="Select project" searchable w={190} /></Table.Td>
-                  <Table.Td><TextInput size="xs" value={row.task ?? ''} onChange={(event) => updateRow(row.id, { task: event.currentTarget.value })} placeholder="What moved forward?" w={210} /></Table.Td>
-                  <Table.Td><TextInput size="xs" type="time" value={row.start_time ?? ''} onChange={(event) => updateRow(row.id, { start_time: event.currentTarget.value })} w={100} /></Table.Td>
-                  <Table.Td><TextInput size="xs" type="time" value={row.end_time ?? ''} onChange={(event) => updateRow(row.id, { end_time: event.currentTarget.value })} w={100} /></Table.Td>
-                  <Table.Td><Select size="xs" value={row.status} onChange={(value) => updateRow(row.id, { status: (value ?? 'In Progress') as WorklogStatus })} data={statusOptions} w={130} /></Table.Td>
+                  <Table.Td><Select size="xs" value={projectValue(row, descriptions) || null} onChange={(value) => updateRow(row.id, { project: value ?? '' })} data={descriptions.map((item) => ({ value: item.Description, label: item.Description }))} placeholder="Select project" searchable w={190} disabled={!rowEditable} /></Table.Td>
+                  <Table.Td><TextInput size="xs" value={row.task ?? ''} onChange={(event) => updateRow(row.id, { task: event.currentTarget.value })} placeholder="What moved forward?" w={210} disabled={!rowEditable} /></Table.Td>
+                  <Table.Td><TextInput size="xs" type="time" value={row.start_time ?? ''} onChange={(event) => updateRow(row.id, { start_time: event.currentTarget.value })} w={100} disabled={!rowEditable} /></Table.Td>
+                  <Table.Td><TextInput size="xs" type="time" value={row.end_time ?? ''} onChange={(event) => updateRow(row.id, { end_time: event.currentTarget.value })} w={100} disabled={!rowEditable} /></Table.Td>
+                  <Table.Td><Select size="xs" value={row.status} onChange={(value) => updateRow(row.id, { status: (value ?? 'In Progress') as WorklogStatus })} data={statusOptions} w={130} disabled={!rowEditable} /></Table.Td>
                   <Table.Td><Badge variant="light" color={row.hours ? 'indigo' : 'gray'}>{formatHours(row.hours)}</Badge></Table.Td>
-                  <Table.Td><Group justify="flex-end" gap={4}><Tooltip label="Save entry"><ActionIcon size="sm" color="teal" variant={row.dirty ? 'filled' : 'subtle'} disabled={!row.dirty || !projectValue(row, descriptions) || saveMutation.isPending} onClick={() => saveMutation.mutate(row)} aria-label="Save entry"><IconCheck size={15} /></ActionIcon></Tooltip><Tooltip label="Remove entry"><ActionIcon size="sm" color="red" variant="subtle" onClick={() => removeRow(row)} aria-label="Remove entry"><IconTrash size={15} /></ActionIcon></Tooltip>{row.dirty && <Tooltip label="Discard changes"><ActionIcon size="sm" color="gray" variant="subtle" onClick={() => row.isNew ? removeRow(row) : setRows((current) => current.map((item) => item.id === row.id ? { ...row, ...(worklogsQuery.data?.find((source) => source.id === row.id) ?? {}), dirty: false } : item))} aria-label="Discard changes"><IconX size={15} /></ActionIcon></Tooltip>}</Group></Table.Td>
+                  <Table.Td><Group justify="flex-end" gap={4}><Tooltip label={rowEditable ? 'Save entry' : 'Locked entry'}><ActionIcon size="sm" color="teal" variant={row.dirty ? 'filled' : 'subtle'} disabled={!rowEditable || !row.dirty || !projectValue(row, descriptions) || saveMutation.isPending} onClick={() => saveMutation.mutate(row)} aria-label="Save entry"><IconCheck size={15} /></ActionIcon></Tooltip><Tooltip label={rowEditable ? 'Remove entry' : 'Locked entry'}><ActionIcon size="sm" color="red" variant="subtle" disabled={!rowEditable} onClick={() => removeRow(row)} aria-label="Remove entry"><IconTrash size={15} /></ActionIcon></Tooltip>{row.dirty && rowEditable && <Tooltip label="Discard changes"><ActionIcon size="sm" color="gray" variant="subtle" onClick={() => row.isNew ? removeRow(row) : setRows((current) => current.map((item) => item.id === row.id ? { ...row, ...(worklogsQuery.data?.find((source) => source.id === row.id) ?? {}), dirty: false } : item))} aria-label="Discard changes"><IconX size={15} /></ActionIcon></Tooltip>}</Group></Table.Td>
                 </Table.Tr>;
               })}
             </Table.Tbody>

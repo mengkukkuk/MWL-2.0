@@ -7,6 +7,7 @@ import {
   Group,
   NavLink,
   ScrollArea,
+  Select,
   Stack,
   Text,
   ThemeIcon,
@@ -27,6 +28,7 @@ import {
 import { Outlet, useLocation, useNavigate } from 'react-router';
 
 import { useAuth } from '../auth/AuthContext';
+import { useWorkspace } from '../workspace/WorkspaceContext';
 
 const navItems = [
   { label: 'Dashboard', description: 'Your operating view', path: '/', icon: IconDashboard },
@@ -49,7 +51,8 @@ export function AppShellLayout() {
   const [opened, { toggle, close }] = useDisclosure();
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout, isElevated } = useAuth();
+  const { members, selectedMemberId, setSelectedMemberId, isLoadingMembers } = useWorkspace();
 
   const go = (path: string) => {
     navigate(path);
@@ -78,8 +81,20 @@ export function AppShellLayout() {
             </Group>
           </Group>
           <Group gap="sm">
+            <Select
+              aria-label="Workspace member"
+              placeholder="Select member"
+              value={selectedMemberId}
+              onChange={(value) => setSelectedMemberId(value as typeof selectedMemberId)}
+              data={members.map((member) => ({ value: member.id, label: member.name ?? member.id }))}
+              searchable
+              clearable={isElevated}
+              disabled={isLoadingMembers || !isElevated}
+              w={190}
+              size="sm"
+            />
             <Tooltip label="Security and settings">
-              <ActionIcon variant="subtle" color="gray" size="lg" onClick={() => navigate(isAdmin ? '/settings' : '/')} aria-label="Settings">
+              <ActionIcon variant="subtle" color="gray" size="lg" onClick={() => navigate(isElevated ? '/settings' : '/')} aria-label="Settings">
                 <IconSettings size={19} />
               </ActionIcon>
             </Tooltip>
@@ -103,7 +118,7 @@ export function AppShellLayout() {
         <AppShell.Section grow component={ScrollArea} scrollbarSize={5}>
           <Stack gap={7}>
             <Text size="xs" fw={800} c="dimmed" tt="uppercase" lts="0.1em" px="sm" mb={4}>Workspace</Text>
-            {navItems.map((item) => {
+            {navItems.filter((item) => item.path !== '/summary' || isElevated).map((item) => {
               const Icon = item.icon;
               const active = item.path === '/' ? location.pathname === '/' : location.pathname.startsWith(item.path);
               return (
@@ -119,7 +134,7 @@ export function AppShellLayout() {
                 />
               );
             })}
-            {isAdmin && (
+            {isElevated && (
               <>
                 <Text size="xs" fw={800} c="dimmed" tt="uppercase" lts="0.1em" px="sm" mt="lg" mb={4}>Administration</Text>
                 <NavLink
