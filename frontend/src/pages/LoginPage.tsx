@@ -2,10 +2,8 @@ import { useEffect, useState } from 'react';
 import {
   Alert,
   Anchor,
-  Box,
   Button,
   Card,
-  Center,
   Divider,
   Group,
   PasswordInput,
@@ -21,6 +19,7 @@ import { Navigate, useNavigate, useSearchParams } from 'react-router';
 import { authApi } from '../api/auth';
 import { ApiError } from '../api/http';
 import { useAuth } from '../auth/AuthContext';
+import { AuthLayout } from '../components/AuthLayout';
 import { safeNextPath } from '../utils/nextUrl';
 import { notifySuccess } from '../utils/notify';
 import type { AccountStatusBody, LockoutBody } from '../types/api';
@@ -120,17 +119,15 @@ export function LoginPage() {
   };
 
   return (
-    <Center mih="100vh" p="md">
-      <Box w={400} maw="100%">
-        <Stack gap="lg">
-          <Stack gap={4} align="center">
-            <Title order={2}>Monthly Worklog</Title>
-            <Text c="dimmed" size="sm">
-              Sign in to continue
-            </Text>
-          </Stack>
+    <AuthLayout>
+      <Stack gap="xl" maw={400} mx="auto" className="auth-form-content">
+        <Stack gap={5}>
+          <Text size="xs" fw={800} tt="uppercase" lts="0.12em" c="indigo">Welcome back</Text>
+          <Title order={2} className="auth-form-title">Sign in to your workspace</Title>
+          <Text c="dimmed" size="sm">Pick up where you left off with your team’s worklog.</Text>
+        </Stack>
 
-          <Card padding="lg">
+          <Card padding="xl" className="auth-form-card">
             <form onSubmit={handleSubmit}>
               <Stack>
                 {outcome.kind === 'invalid' && (
@@ -180,8 +177,7 @@ export function LoginPage() {
               </Stack>
             </form>
           </Card>
-        </Stack>
-      </Box>
-    </Center>
+      </Stack>
+    </AuthLayout>
   );
 }

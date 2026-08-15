@@ -15,15 +15,18 @@ export function PageHeader({
   breadcrumb?: string;
 }) {
   return (
-    <Stack gap="xs" mb="xl">
+    <Stack gap="xs" mb="xl" className="page-header">
       <Group justify="space-between" align="flex-end" gap="md" wrap="wrap">
-        <div>
+        <div className="page-header-copy">
           {breadcrumb && <Breadcrumbs mb={6} fz="xs" c="dimmed">{['Workspace', breadcrumb]}</Breadcrumbs>}
-          <Text size="xs" fw={800} tt="uppercase" lts="0.12em" c="indigo">{eyebrow}</Text>
+          <Group gap={8} mb={4}>
+            <span className="eyebrow-dot" aria-hidden="true" />
+            <Text size="xs" fw={800} tt="uppercase" lts="0.12em" c="indigo">{eyebrow}</Text>
+          </Group>
           <Title order={1} mt={4} className="page-title">{title}</Title>
           <Text c="dimmed" mt={5} maw={660}>{description}</Text>
         </div>
-        {actions && <Group>{actions}</Group>}
+        {actions && <Group className="page-header-actions">{actions}</Group>}
       </Group>
     </Stack>
   );

@@ -71,12 +71,15 @@ export function AppShellLayout() {
           <Group gap="sm">
             <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" aria-label="Toggle navigation" />
             <Group gap="sm" wrap="nowrap">
-              <ThemeIcon size={38} radius="xl" variant="gradient" gradient={{ from: 'indigo', to: 'cyan', deg: 135 }}>
+              <ThemeIcon size={40} radius="xl" variant="gradient" gradient={{ from: 'indigo', to: 'cyan', deg: 135 }} className="brand-mark">
                 <IconFileAnalytics size={21} />
               </ThemeIcon>
               <div>
                 <Text fw={800} size="lg" lh={1.1} className="brand-wordmark">Meter Worklog</Text>
-                <Text size="xs" c="dimmed" fw={600} tt="uppercase" lts="0.08em">Operations workspace</Text>
+                <Group gap={5} mt={3}>
+                  <span className="status-dot" aria-hidden="true" />
+                  <Text size="xs" c="dimmed" fw={600} tt="uppercase" lts="0.08em">Operations workspace</Text>
+                </Group>
               </div>
             </Group>
           </Group>

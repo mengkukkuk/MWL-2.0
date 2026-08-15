@@ -17,6 +17,7 @@ import { Link, useSearchParams } from 'react-router';
 
 import { authApi } from '../api/auth';
 import { ApiError } from '../api/http';
+import { AuthLayout } from '../components/AuthLayout';
 
 export function ResetPasswordPage() {
   const [params] = useSearchParams();
@@ -69,10 +70,11 @@ export function ResetPasswordPage() {
   });
 
   return (
-    <Center mih="100vh" p="md">
-      <Card padding="lg" w={400} maw="100%">
+    <AuthLayout>
+      <Card padding="xl" maw={400} mx="auto" className="auth-form-card">
         <Stack>
-          <Title order={3} ta="center">
+          <Text size="xs" fw={800} tt="uppercase" lts="0.12em" c="indigo">Account recovery</Text>
+          <Title order={3} className="auth-form-title">
             Reset password
           </Title>
 
@@ -125,6 +127,6 @@ export function ResetPasswordPage() {
           )}
         </Stack>
       </Card>
-    </Center>
+    </AuthLayout>
   );
 }
