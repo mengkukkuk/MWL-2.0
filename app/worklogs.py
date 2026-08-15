@@ -49,7 +49,10 @@ def get_worklogs():
                w.EmployeeID  AS member_id,   -- alias preserved for frontend payload
                w.log_date, w.project, w.task,
                w.start_time, w.end_time,
-               w.hours, w.regular_hours, w.OT1, w.OT1_5, w.OT3,
+               w.hours, w.regular_hours,
+               w.OT1   AS "OT1",
+               w.OT1_5 AS "OT1_5",
+               w.OT3   AS "OT3",
                w.status, w.note,
                COALESCE(w.IsEditRow, {TRUE}) AS "IsEditRow",
                COALESCE(w.is_allowance, {FALSE}) AS is_allowance,
@@ -58,7 +61,6 @@ def get_worklogs():
         LEFT JOIN ProjectAndBudget pb
                ON pb.ProjectCode = w.project
         WHERE w.EmployeeID = ? AND w.log_date BETWEEN ? AND ?
-        AND pb.Description = w.Description
         ORDER BY w.log_date
         """,
         (employee_id, first_day, last_day),
@@ -342,6 +344,8 @@ def create_worklog():
             'FROM ProjectAndBudget WHERE Description=?',
             (project,), fetchone=True,
         )
+        if not mapp:
+            return jsonify({'error': f'Unknown project: {project}'}), 400
         project_code = mapp.get('ProjectCode')
         project_dep = mapp.get('ProjectDepartment')
 
@@ -447,25 +451,22 @@ def update_worklog(wid):
 
     #Mapping description and project code
     project_code, project_dep = None, None
+    if project_des == '':
+        wl_des = app_pkg.db.query(
+            'SELECT Description AS "Description" FROM worklogs WHERE id=?', (wid,), fetchone=True
+        )
+        if not wl_des:
+            return jsonify({'error': 'Worklog not found'}), 404
+        project_des = wl_des.get('Description') or ''
+
     if project_des != '':
         mapp = app_pkg.db.query(
             'SELECT ProjectCode AS "ProjectCode", ProjectDepartment AS "ProjectDepartment" '
             'FROM ProjectAndBudget WHERE Description=?',
             (project_des,), fetchone=True,
         )
-        project_code = mapp.get('ProjectCode')
-        project_dep = mapp.get('ProjectDepartment')
-
-    else:
-        wl_des = app_pkg.db.query(
-            'SELECT Description AS "Description" FROM worklogs WHERE id=?', (wid,), fetchone=True
-        )
-        project_des = wl_des.get('Description')
-        mapp = app_pkg.db.query(
-            'SELECT ProjectCode AS "ProjectCode", ProjectDepartment AS "ProjectDepartment" '
-            'FROM ProjectAndBudget WHERE Description=?',
-            (project_des,), fetchone=True,
-        )
+        if not mapp:
+            return jsonify({'error': f'Unknown project: {project_des}'}), 400
         project_code = mapp.get('ProjectCode')
         project_dep = mapp.get('ProjectDepartment')
 

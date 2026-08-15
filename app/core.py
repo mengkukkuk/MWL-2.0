@@ -3,8 +3,10 @@ import re as _re
 
 from flask import Blueprint
 from flask import jsonify
+from flask import redirect
 from flask import render_template
 from flask import request
+from flask import session
 
 import app as app_pkg
 
@@ -88,3 +90,18 @@ def set_time_presets():
     else:
         app_pkg.db.execute("INSERT INTO settings (\"key\", value) VALUES ('time_presets', ?)", (payload,))
     return jsonify({'ok': True})
+
+
+@core_bp.route('/<path:spa_path>')
+def spa_catchall(spa_path):
+    """Serve the SPA shell for client-side routes so deep links survive a refresh.
+
+    Werkzeug ranks path-converter rules below static ones, so this never shadows
+    a real route. Intentionally not @login_required: that decorator answers with
+    JSON 401, which would show raw JSON to someone refreshing a deep link.
+    """
+    if spa_path.startswith(('api/', 'static/')):
+        return jsonify({'error': 'not found'}), 404
+    if not session.get('user_id'):
+        return redirect(f'/login?next=/{spa_path}')
+    return render_template('index.html')

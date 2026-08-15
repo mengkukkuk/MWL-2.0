@@ -1,0 +1,23 @@
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+}
+
+/* Worklog day-grid affordances. Kept here rather than inline so the shading
+   rules for weekends/holidays live in one place. */
+.row-weekend {
+  background-color: var(--mantine-color-gray-light);
+}
+
+.row-holiday {
+  background-color: var(--mantine-color-red-light);
+}
+
+.row-dirty td:first-of-type {
+  box-shadow: inset 3px 0 0 0 var(--mantine-color-yellow-6);
+}
