@@ -1,7 +1,7 @@
 :root {
   color-scheme: light;
   --workspace-ink: #172033;
-  --workspace-muted: #71809a;
+  --workspace-muted: #66758c;
   --workspace-line: #e6ebf3;
   --workspace-canvas: #f4f7fb;
   --workspace-surface: rgba(255, 255, 255, 0.92);
@@ -25,6 +25,7 @@
   --motion-quick: 130ms;
   --motion-settle: 220ms;
   --motion-ease: cubic-bezier(0.2, 0.7, 0.3, 1);
+  --motion-orbit: 7s;
 }
 
 html,
@@ -89,6 +90,14 @@ select {
   transform: translateY(-1px);
 }
 
+.mantine-Button-root[data-variant="filled"]:not(:disabled) {
+  box-shadow: 0 7px 16px rgba(83, 101, 223, 0.18);
+}
+
+.mantine-Button-root[data-variant="filled"]:not(:disabled):hover {
+  box-shadow: 0 11px 22px rgba(83, 101, 223, 0.25);
+}
+
 .mantine-Button-root:not(:disabled):active,
 .mantine-ActionIcon-root:not(:disabled):active {
   transform: translateY(0);
@@ -120,7 +129,7 @@ select {
 
 .app-shell {
   --workspace-ink: #172033;
-  --workspace-muted: #71809a;
+  --workspace-muted: #66758c;
   /* One gutter value shared by the header row and the page body, so the page
      title lines up with the wordmark above it. */
   --page-gutter: clamp(16px, 2.2vw, 34px);
@@ -136,6 +145,10 @@ select {
 .app-navbar {
   background: rgba(250, 252, 255, 0.94);
   border-right: 1px solid var(--workspace-line);
+}
+
+.mobile-member-section {
+  display: none;
 }
 
 /* The navbar and header are position:fixed, so Mantine reserves room for them
@@ -225,6 +238,8 @@ select {
 
 .page-header {
   position: relative;
+  padding-bottom: 22px;
+  border-bottom: 1px solid rgba(221, 227, 239, 0.82);
 }
 
 .page-header-copy {
@@ -232,6 +247,9 @@ select {
 }
 
 .page-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
   padding-bottom: 2px;
 }
 
@@ -259,11 +277,66 @@ select {
   overflow: hidden;
 }
 
+/* Dashboard hierarchy: metrics use a compact five-column scan line on wide
+   screens, while the denser activity table gets more room than the chart. */
+.section-toolbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.section-toolbar > :last-child {
+  max-width: 620px;
+  text-align: right;
+}
+
+.dashboard-actions {
+  justify-content: flex-end;
+}
+
+.dashboard-primary-action {
+  min-width: 146px;
+}
+
+.dashboard-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.dashboard-metrics-grid > * {
+  min-width: 0;
+}
+
+.dashboard-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.82fr) minmax(480px, 1.18fr);
+  gap: 18px;
+}
+
+.dashboard-panel {
+  transition:
+    transform var(--motion-settle) var(--motion-ease),
+    box-shadow var(--motion-settle) var(--motion-ease),
+    border-color var(--motion-settle) var(--motion-ease);
+}
+
+.dashboard-panel:hover {
+  transform: translateY(-2px);
+  border-color: #d6ddf1;
+  box-shadow: 0 21px 48px rgba(37, 52, 88, 0.1);
+}
+
 .metric-card {
   position: relative;
   min-height: 148px;
   overflow: hidden;
-  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+  isolation: isolate;
+  transition:
+    transform var(--motion-settle) var(--motion-ease),
+    box-shadow var(--motion-settle) var(--motion-ease),
+    border-color var(--motion-settle) var(--motion-ease);
 }
 
 .metric-card::after {
@@ -273,15 +346,116 @@ select {
   width: 130px;
   height: 130px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(105, 125, 239, 0.11), transparent 68%);
+  border: 1px solid rgba(105, 125, 239, 0.11);
+  background: radial-gradient(circle, rgba(105, 125, 239, 0.08), transparent 68%);
+  box-shadow: 0 0 0 16px rgba(105, 125, 239, 0.025), 0 0 0 34px rgba(105, 125, 239, 0.018);
   content: "";
   pointer-events: none;
+  transition: transform 520ms var(--motion-ease), opacity 520ms var(--motion-ease);
 }
 
 .metric-card:hover {
   transform: translateY(-3px);
   border-color: #d6ddf1;
   box-shadow: 0 20px 44px rgba(37, 52, 88, 0.11);
+}
+
+.metric-card:hover::after {
+  transform: scale(1.15) translate(-4px, -4px);
+}
+
+.metric-card[data-has-orbit="true"] {
+  background:
+    radial-gradient(circle at 88% 12%, rgba(47, 185, 150, 0.12), transparent 8rem),
+    var(--workspace-surface);
+}
+
+/* The completion metric is the visual signature: a useful progress circle,
+   an ambient orbit, and one small "comet". It loops slowly, then pops when
+   the parent card is hovered without making the content jump. */
+.metric-orbit {
+  --orbit-color: var(--workspace-indigo);
+  --orbit-progress: 0%;
+  position: relative;
+  display: grid;
+  flex: 0 0 auto;
+  width: 72px;
+  height: 72px;
+  place-items: center;
+  transition:
+    transform 420ms var(--motion-ease),
+    filter 420ms var(--motion-ease);
+}
+
+.metric-orbit-track {
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: conic-gradient(from -90deg, var(--orbit-color) 0 var(--orbit-progress), #e8edf2 var(--orbit-progress) 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7), 0 8px 20px rgba(47, 185, 150, 0.12);
+}
+
+.metric-orbit-track::after {
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: inset 0 0 0 1px rgba(220, 229, 235, 0.82);
+  content: "";
+}
+
+.metric-orbit-ring {
+  position: absolute;
+  inset: -5px;
+  border: 1px dashed color-mix(in srgb, var(--orbit-color) 45%, transparent);
+  border-radius: 50%;
+  animation: metric-orbit-spin var(--motion-orbit) linear infinite;
+}
+
+.metric-orbit-dot {
+  position: absolute;
+  top: 50%;
+  right: -4px;
+  width: 8px;
+  height: 8px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--orbit-color);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--orbit-color) 14%, transparent), 0 3px 8px rgba(37, 52, 88, 0.18);
+  transform: translateY(-50%);
+}
+
+.metric-orbit-label {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+}
+
+.metric-orbit-label strong {
+  color: #26324a;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.metric-orbit-label small {
+  margin-top: 3px;
+  color: var(--workspace-muted);
+  font-size: 0.56rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.metric-card:hover .metric-orbit {
+  filter: drop-shadow(0 10px 12px rgba(47, 185, 150, 0.16));
+  transform: scale(1.13) rotate(-3deg);
+}
+
+@keyframes metric-orbit-spin {
+  to { transform: rotate(1turn); }
 }
 
 .metric-value {
@@ -445,6 +619,29 @@ select {
     linear-gradient(120deg, #eff7ff, #f4f0ff);
 }
 
+.dashboard-breakdown-row {
+  cursor: pointer;
+}
+
+.dashboard-breakdown-row td {
+  transition: background-color var(--motion-quick) var(--motion-ease), box-shadow var(--motion-quick) var(--motion-ease);
+}
+
+.dashboard-breakdown-row:hover td,
+.dashboard-breakdown-row:focus-visible td {
+  background: #f5f7ff;
+}
+
+.dashboard-breakdown-row:hover td:first-child,
+.dashboard-breakdown-row:focus-visible td:first-child {
+  box-shadow: inset 3px 0 0 var(--workspace-indigo);
+}
+
+.dashboard-breakdown-row:focus-visible {
+  outline: 2px solid var(--workspace-indigo);
+  outline-offset: -2px;
+}
+
 .table-card {
   min-width: 0;
   overflow: hidden;
@@ -455,9 +652,17 @@ select {
   overflow-x: auto;
 }
 
+.dashboard-recent-table table {
+  min-width: 540px;
+}
+
+.dashboard-breakdown-table table {
+  min-width: 700px;
+}
+
 .table-scroll table thead th {
   background: #fafbfe;
-  color: #7e899d;
+  color: #5f6c82;
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.09em;
@@ -949,6 +1154,18 @@ tr.row-selected {
 }
 
 @media (max-width: 62em) {
+  .dashboard-metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-metrics-grid > :nth-child(5) {
+    grid-column: 1 / -1;
+  }
+
+  .dashboard-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
   .auth-layout {
     grid-template-columns: 1fr;
   }
@@ -975,6 +1192,37 @@ tr.row-selected {
     display: none;
   }
 
+  .brand-meta {
+    display: none;
+  }
+
+  /* Keep the fixed header to one row. The account chip becomes a compact
+     sign-out action; identity remains available when the navigation opens. */
+  .user-chip {
+    padding: 0;
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .user-chip .mantine-Avatar-root {
+    display: none;
+  }
+
+  .header-member-picker {
+    display: none;
+  }
+
+  .mobile-member-section {
+    display: block;
+    padding-bottom: 16px;
+  }
+
+  .mobile-member-section .member-picker {
+    width: 100%;
+    max-width: none;
+  }
+
   .app-shell .mantine-AppShell-main {
     padding-block: calc(var(--app-shell-header-offset, 0rem) + 18px) 40px;
   }
@@ -993,6 +1241,35 @@ tr.row-selected {
 
   .page-header-actions .mantine-Button-root {
     flex: 1;
+  }
+
+  .dashboard-actions {
+    display: grid;
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .dashboard-actions .mantine-SegmentedControl-root {
+    grid-column: 1 / -1;
+  }
+
+  .dashboard-actions .period-select,
+  .dashboard-actions .mantine-Button-root {
+    width: 100%;
+  }
+
+  .dashboard-actions .period-label {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .section-toolbar {
+    display: block;
+  }
+
+  .section-toolbar > :last-child {
+    margin-top: 5px;
+    text-align: left;
   }
 
   .auth-page {
@@ -1545,6 +1822,14 @@ tr.row-selected {
 }
 
 @media (max-width: 48em) {
+  .dashboard-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-metrics-grid > :nth-child(5) {
+    grid-column: auto;
+  }
+
   .team-grid {
     grid-template-columns: 1fr;
   }
@@ -1571,6 +1856,8 @@ tr.row-selected {
 
   .member-card:hover,
   .calendar-cell:not([data-outside="true"]):hover,
+  .dashboard-panel:hover,
+  .metric-card:hover .metric-orbit,
   .mantine-Button-root:not(:disabled):hover,
   .mantine-ActionIcon-root:not(:disabled):hover {
     transform: none;

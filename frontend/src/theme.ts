@@ -23,6 +23,7 @@ const FONT_STACK = [
 
 export const theme = createTheme({
   primaryColor: 'indigo',
+  primaryShade: 7,
   defaultRadius: 'lg',
   fontFamily: FONT_STACK,
   headings: { fontFamily: FONT_STACK, fontWeight: '700' },

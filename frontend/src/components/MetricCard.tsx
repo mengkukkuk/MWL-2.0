@@ -1,5 +1,5 @@
-import { Card, Group, RingProgress, Stack, Text, ThemeIcon } from '@mantine/core';
-import type { ReactNode } from 'react';
+import { Card, Group, Stack, Text, ThemeIcon } from '@mantine/core';
+import type { CSSProperties, ReactNode } from 'react';
 
 export function MetricCard({
   label,
@@ -16,8 +16,10 @@ export function MetricCard({
   accent?: string;
   progress?: number;
 }) {
+  const boundedProgress = progress === undefined ? undefined : Math.max(0, Math.min(100, progress));
+
   return (
-    <Card className="metric-card" padding="lg">
+    <Card className="metric-card" padding="lg" data-has-orbit={boundedProgress !== undefined || undefined}>
       <Group justify="space-between" align="flex-start" wrap="nowrap">
         <Stack gap={7}>
           <Group gap="xs">
@@ -27,8 +29,25 @@ export function MetricCard({
           <Text fz={30} fw={800} lh={1.05} className="metric-value">{value}</Text>
           <Text size="xs" c="dimmed">{helper}</Text>
         </Stack>
-        {progress !== undefined && (
-          <RingProgress size={64} thickness={6} roundCaps sections={[{ value: progress, color: accent }]} label={<Text ta="center" size="xs" fw={800}>{progress}%</Text>} />
+        {boundedProgress !== undefined && (
+          <div
+            className="metric-orbit"
+            role="img"
+            aria-label={`${boundedProgress}% complete`}
+            style={{
+              '--orbit-progress': `${boundedProgress}%`,
+              '--orbit-color': `var(--mantine-color-${accent}-6)`,
+            } as CSSProperties}
+          >
+            <span className="metric-orbit-track" aria-hidden="true" />
+            <span className="metric-orbit-ring" aria-hidden="true">
+              <span className="metric-orbit-dot" />
+            </span>
+            <span className="metric-orbit-label" aria-hidden="true">
+              <strong>{boundedProgress}%</strong>
+              <small>done</small>
+            </span>
+          </div>
         )}
       </Group>
     </Card>

@@ -37,7 +37,7 @@ function friendlyMessage(status: number, serverMessage: string | null): string {
     case 401:
       return 'Your session has expired. Please sign in again.';
     case 403:
-      return 'You do not have permission to do that.';
+      return 'Permission denied';
     case 404:
       return 'Not found.';
     case 413:

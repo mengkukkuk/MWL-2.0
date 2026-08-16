@@ -77,7 +77,7 @@ export function AppShellLayout() {
               </ThemeIcon>
               <div>
                 <Text fw={800} size="lg" lh={1.1} className="brand-wordmark">Meter Worklog</Text>
-                <Group gap={5} mt={3}>
+                <Group gap={5} mt={3} className="brand-meta">
                   <span className="status-dot" aria-hidden="true" />
                   <Text size="xs" c="dimmed" fw={600} tt="uppercase" lts="0.08em">Operations workspace</Text>
                 </Group>
@@ -85,13 +85,15 @@ export function AppShellLayout() {
             </Group>
           </Group>
           <Group gap="sm">
-            <MemberPicker
-              members={members}
-              value={selectedMemberId}
-              onChange={setSelectedMemberId}
-              canSwitch={isElevated}
-              loading={isLoadingMembers}
-            />
+            <div className="header-member-picker">
+              <MemberPicker
+                members={members}
+                value={selectedMemberId}
+                onChange={setSelectedMemberId}
+                canSwitch={isElevated}
+                loading={isLoadingMembers}
+              />
+            </div>
             <Tooltip label="Security and settings">
               <ActionIcon variant="subtle" color="gray" size="lg" onClick={() => navigate(isElevated ? '/settings' : '/')} aria-label="Settings">
                 <IconSettings size={19} />
@@ -114,6 +116,16 @@ export function AppShellLayout() {
       </AppShell.Header>
 
       <AppShell.Navbar p="md" className="app-navbar">
+        <AppShell.Section className="mobile-member-section">
+          <Text size="xs" fw={800} c="dimmed" tt="uppercase" lts="0.1em" px="sm" mb={7}>Viewing record</Text>
+          <MemberPicker
+            members={members}
+            value={selectedMemberId}
+            onChange={setSelectedMemberId}
+            canSwitch={isElevated}
+            loading={isLoadingMembers}
+          />
+        </AppShell.Section>
         <AppShell.Section grow component={ScrollArea} scrollbarSize={5}>
           <Stack gap={7}>
             <Text size="xs" fw={800} c="dimmed" tt="uppercase" lts="0.1em" px="sm" mb={4}>Workspace</Text>

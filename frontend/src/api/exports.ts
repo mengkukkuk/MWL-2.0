@@ -7,8 +7,6 @@ import type { EmployeeId } from '../types/api';
  * a new tab so an error status surfaces as a notification instead of replacing
  * the page with a raw JSON body.
  *
- * Known backend gap: exports.py loads `Monthly_Worklog_Template.xlsx`, which is
- * not present in the repo. Until that file is supplied both calls answer 500.
  */
 async function downloadViaGet(path: string, fallbackName: string) {
   const res = await fetch(path, { credentials: 'same-origin' });
@@ -18,10 +16,7 @@ async function downloadViaGet(path: string, fallbackName: string) {
       const parsed = JSON.parse(await res.text());
       if (typeof parsed?.error === 'string') message = parsed.error;
     } catch {
-      message =
-        res.status >= 500
-          ? 'Export failed on the server. The worklog template may be missing.'
-          : message;
+      message = res.status >= 500 ? 'Export failed on the server.' : message;
     }
     throw new ApiError(res.status, message);
   }
