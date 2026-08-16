@@ -76,7 +76,7 @@ export function DashboardPage() {
           : `Overview of ${dayjs(selectedMonth).format('MMMM')} ${year}`}
         description={view === 'team'
           ? 'Every member’s month at a glance. Cards are ordered by who needs attention first — open one to see their full record.'
-          : 'A focused view of your time, delivery progress, and the work that needs attention next.'}
+          : ' '}
         actions={(
           <Group gap="sm" align="center" wrap="wrap" className="dashboard-actions">
             {isElevated && (
