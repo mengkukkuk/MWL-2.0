@@ -67,8 +67,9 @@ select {
    its own for its components; this covers the bare elements this app adds. */
 .member-card:focus-visible,
 .calendar-cell:focus-visible,
-.month-chip:focus-visible,
-.month-tab:focus-visible {
+.member-picker:focus-visible,
+.period-step:focus-visible,
+.period-label:focus-visible {
   outline: 2px solid var(--workspace-indigo);
   outline-offset: 2px;
 }
@@ -120,6 +121,9 @@ select {
 .app-shell {
   --workspace-ink: #172033;
   --workspace-muted: #71809a;
+  /* One gutter value shared by the header row and the page body, so the page
+     title lines up with the wordmark above it. */
+  --page-gutter: clamp(16px, 2.2vw, 34px);
 }
 
 .app-header {
@@ -134,14 +138,19 @@ select {
   border-right: 1px solid var(--workspace-line);
 }
 
+/* The navbar and header are position:fixed, so Mantine reserves room for them
+   by adding --app-shell-navbar-offset / --app-shell-header-offset into main's
+   padding. A `padding` shorthand here would wipe both and slide every page
+   underneath the sidebar, so the offsets are carried through explicitly.
+   Mantine zeroes the navbar offset itself when the sidebar collapses. */
 .app-shell .mantine-AppShell-main {
-  min-height: 100vh;
-  padding: 34px clamp(18px, 3vw, 44px) 56px;
+  padding-block: calc(var(--app-shell-header-offset, 0rem) + 26px) 52px;
+  padding-inline: calc(var(--app-shell-navbar-offset, 0rem) + var(--page-gutter)) var(--page-gutter);
   background: transparent;
 }
 
-.app-shell .mantine-AppShell-main > * {
-  width: min(100%, 1480px);
+.page-shell {
+  width: min(100%, 1460px);
   margin-inline: auto;
 }
 
@@ -283,49 +292,150 @@ select {
   background: linear-gradient(120deg, rgba(255, 255, 255, 0.97), rgba(243, 246, 255, 0.94));
 }
 
-.month-chip {
+/* ── Period select ──────────────────────────────────────────────────────────
+   Arrows step, the label jumps. One pill so it reads as a single control. */
+
+.period-select {
   display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 13px;
+  align-items: stretch;
+  overflow: hidden;
   border: 1px solid #dee5f0;
   border-radius: 12px;
   background: #fff;
-  color: #44516a;
   box-shadow: 0 4px 12px rgba(37, 52, 88, 0.04);
-  transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
 }
 
-.month-chip:hover {
-  border-color: #cdd6f5;
-  box-shadow: 0 7px 18px rgba(37, 52, 88, 0.08);
-  transform: translateY(-1px);
+.period-step,
+.period-label {
+  display: inline-flex;
+  align-items: center;
+  color: #44516a;
+  transition: background-color var(--motion-quick) var(--motion-ease), color var(--motion-quick) var(--motion-ease);
 }
 
-.month-tabs {
-  padding: 4px;
-  border: 1px solid #e0e6ef;
-  border-radius: 12px;
-  background: #fff;
-}
-
-.month-tab {
-  padding: 7px 11px;
-  border-radius: 8px;
+.period-step {
+  justify-content: center;
+  width: 34px;
   color: #7b8799;
-  font-size: 12px;
-  font-weight: 750;
-  transition: background-color 140ms ease, color 140ms ease;
 }
 
-.month-tab:hover {
-  color: #4e5d77;
-  background: #f5f7fb;
-}
-
-.month-tab.active {
-  background: #e7eaff;
+.period-step:hover:not(:disabled) {
+  background: #f1f4fb;
   color: #3949ab;
+}
+
+.period-step:disabled {
+  color: #c3cbdb;
+  cursor: not-allowed;
+}
+
+.period-label {
+  gap: 8px;
+  padding: 9px 12px;
+  border-inline: 1px solid #eaeef6;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.period-label:hover {
+  background: #f1f4fb;
+  color: #3949ab;
+}
+
+/* Fixed width stops the pill resizing as the month name changes length, which
+   would otherwise nudge the arrows sideways on every step. */
+.period-label-text {
+  min-width: 8.5ch;
+  text-align: center;
+}
+
+.period-caret {
+  color: #98a3b8;
+}
+
+.period-option {
+  font-weight: 600;
+}
+
+/* Menu.Item nests its children in itemLabel, so the split has to happen there. */
+.period-option .mantine-Menu-itemLabel {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.period-option[data-selected="true"] {
+  background: #e9edff;
+  color: #3949ab;
+}
+
+.period-option-tag {
+  color: var(--workspace-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ── Member picker ──────────────────────────────────────────────────────────
+   Reads as an identity, not a form field: whose record is on screen. */
+
+.member-picker {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  max-width: 250px;
+  padding: 6px 10px 6px 6px;
+  border: 1px solid #dee5f0;
+  border-radius: 999px;
+  background: #fff;
+  transition: border-color var(--motion-quick) var(--motion-ease),
+    box-shadow var(--motion-quick) var(--motion-ease);
+}
+
+.member-picker:hover:not([data-static="true"]):not(:disabled) {
+  border-color: #c6d0f0;
+  box-shadow: 0 6px 16px rgba(37, 52, 88, 0.09);
+}
+
+.member-picker[data-static="true"] {
+  background: #f7f9fd;
+}
+
+.member-picker-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.member-picker-name,
+.member-picker-role {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.member-picker-name {
+  color: var(--workspace-ink);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.member-picker-role {
+  color: var(--workspace-muted);
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.member-picker-caret {
+  flex: 0 0 auto;
+  color: #98a3b8;
+}
+
+.member-option-copy {
+  min-width: 0;
 }
 
 .insight-banner {
@@ -560,7 +670,7 @@ select {
   }
 
   .app-shell .mantine-AppShell-main {
-    padding: 24px 16px 40px;
+    padding-block: calc(var(--app-shell-header-offset, 0rem) + 18px) 40px;
   }
 
   .page-title {

@@ -16,7 +16,6 @@ import {
   Text,
   ThemeIcon,
   Title,
-  UnstyledButton,
 } from '@mantine/core';
 import {
   IconAlertTriangle,
@@ -33,8 +32,9 @@ import { useAuth } from '../auth/AuthContext';
 import { worklogsApi } from '../api/worklogs';
 import { PageHeader } from '../components/PageHeader';
 import { MetricCard } from '../components/MetricCard';
+import { PeriodSelect } from '../components/PeriodSelect';
 import { TeamOverview } from '../components/TeamOverview';
-import { formatHours, recentMonths } from '../utils/dates';
+import { formatHours } from '../utils/dates';
 import { useNavigate } from 'react-router';
 import { useWorkspace } from '../workspace/WorkspaceContext';
 
@@ -45,7 +45,6 @@ export function DashboardPage() {
   const [view, setView] = useState<'me' | 'team'>('me');
   const [selectedMonth, setSelectedMonth] = useState(dayjs().format('YYYY-MM'));
   const [year, month] = selectedMonth.split('-').map(Number);
-  const months = recentMonths(12);
 
   const dashboardQuery = useQuery({
     queryKey: ['dashboard', selectedMemberId, year],
@@ -88,10 +87,7 @@ export function DashboardPage() {
                 size="sm"
               />
             )}
-            <UnstyledButton className="month-chip" onClick={() => setSelectedMonth(months[0]?.value ?? selectedMonth)}>
-              <IconCalendarStats size={17} />
-              <Text size="sm" fw={700}>{dayjs(selectedMonth).format('MMMM YYYY')}</Text>
-            </UnstyledButton>
+            <PeriodSelect value={selectedMonth} onChange={setSelectedMonth} />
             <Button
               variant="light"
               rightSection={<IconArrowUpRight size={15} />}
@@ -115,19 +111,12 @@ export function DashboardPage() {
         />
       ) : (
       <>
-      <Group justify="space-between" align="center" className="section-toolbar">
-        <div>
-          <Title order={3}>Performance snapshot</Title>
-          <Text size="sm" c="dimmed">Year-to-date signals for {year}</Text>
-        </div>
-        <Group gap={6} className="month-tabs">
-          {months.slice(0, 4).map((item) => (
-            <UnstyledButton key={item.value} className={item.value === selectedMonth ? 'month-tab active' : 'month-tab'} onClick={() => setSelectedMonth(item.value)}>
-              {dayjs(item.value).format('MMM')}
-            </UnstyledButton>
-          ))}
-        </Group>
-      </Group>
+      <div className="section-toolbar">
+        <Title order={3}>Performance snapshot</Title>
+        <Text size="sm" c="dimmed">
+          Year-to-date signals for {year}, with monthly figures from {dayjs(selectedMonth).format('MMMM')}.
+        </Text>
+      </div>
 
       {dashboardQuery.isError && <Alert color="red" icon={<IconInfoCircle size={18} />}>We couldn&apos;t load your dashboard yet. Refresh the page or check your session.</Alert>}
 
