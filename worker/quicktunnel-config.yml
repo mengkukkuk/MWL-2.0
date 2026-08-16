@@ -1,0 +1,6 @@
+# Isolated config for the MWL Quick Tunnel only. This machine also runs an
+# unrelated named tunnel (~/.cloudflared/config.yml, tunnel 913455af..., for
+# scada.mwlts.com) whose ingress rules default to 404 for any hostname it
+# doesn't recognize. `cloudflared tunnel --url` picks up the default config
+# path unless told otherwise, so we point --config at this empty file instead
+# to make sure the Quick Tunnel routes everything to the local Flask backend.

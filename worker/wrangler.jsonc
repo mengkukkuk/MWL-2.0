@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "mwl-timesheet-production",
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-01",
+  "account_id": "50ec9d8adf2939e545a88b9f0ed2c1ac",
+  "observability": {
+    "enabled": true
+  }
+  // BACKEND_ORIGIN (e.g. https://<words>.trycloudflare.com) is set as a
+  // secret via `npx wrangler secret put BACKEND_ORIGIN`, not here — it
+  // changes every time the Quick Tunnel on the Windows box restarts, and
+  // secrets can be updated without redeploying this Worker's code.
+}
