@@ -7,7 +7,6 @@ import {
   Group,
   NavLink,
   ScrollArea,
-  Select,
   Stack,
   Text,
   ThemeIcon,
@@ -28,14 +27,15 @@ import {
 import { Outlet, useLocation, useNavigate } from 'react-router';
 
 import { useAuth } from '../auth/AuthContext';
+import { MemberPicker } from './MemberPicker';
 import { useWorkspace } from '../workspace/WorkspaceContext';
 
 const navItems = [
   { label: 'Dashboard', description: 'Your operating view', path: '/', icon: IconDashboard },
-  { label: 'Worklog', description: 'Capture time and progress', path: '/worklog', icon: IconCalendarEvent },
+  { label: 'Worklog', description: 'Daily time capture', path: '/worklog', icon: IconCalendarEvent },
   { label: 'Allowance', description: 'Track special days', path: '/allowance', icon: IconSparkles },
   { label: 'Summary', description: 'Team-level reporting', path: '/summary', icon: IconChartBar },
-  { label: 'File share', description: 'Secure team workspace', path: '/files', icon: IconFolder },
+  { label: 'File share', description: 'Shared team files', path: '/files', icon: IconFolder },
 ];
 
 function initials(value: string) {
@@ -60,10 +60,11 @@ export function AppShellLayout() {
   };
 
   return (
+    // No `padding` prop: styles.css sets main's padding longhands directly so it
+    // can keep Mantine's navbar/header offsets and add the page gutter on top.
     <AppShell
       header={{ height: 74 }}
-      navbar={{ width: 280, breakpoint: 'sm', collapsed: { mobile: !opened } }}
-      padding="lg"
+      navbar={{ width: 240, breakpoint: 'sm', collapsed: { mobile: !opened } }}
       className="app-shell"
     >
       <AppShell.Header className="app-header">
@@ -84,17 +85,12 @@ export function AppShellLayout() {
             </Group>
           </Group>
           <Group gap="sm">
-            <Select
-              aria-label="Workspace member"
-              placeholder="Select member"
+            <MemberPicker
+              members={members}
               value={selectedMemberId}
-              onChange={(value) => setSelectedMemberId(value as typeof selectedMemberId)}
-              data={members.map((member) => ({ value: member.id, label: member.name ?? member.id }))}
-              searchable
-              clearable={isElevated}
-              disabled={isLoadingMembers || !isElevated}
-              w={190}
-              size="sm"
+              onChange={setSelectedMemberId}
+              canSwitch={isElevated}
+              loading={isLoadingMembers}
             />
             <Tooltip label="Security and settings">
               <ActionIcon variant="subtle" color="gray" size="lg" onClick={() => navigate(isElevated ? '/settings' : '/')} aria-label="Settings">
@@ -142,7 +138,7 @@ export function AppShellLayout() {
                 <Text size="xs" fw={800} c="dimmed" tt="uppercase" lts="0.1em" px="sm" mt="lg" mb={4}>Administration</Text>
                 <NavLink
                   label="Settings"
-                  description="Governance and controls"
+                  description="Access and defaults"
                   leftSection={<IconSettings size={19} stroke={1.8} />}
                   rightSection={location.pathname.startsWith('/settings') ? <IconChevronRight size={15} /> : null}
                   active={location.pathname.startsWith('/settings')}
@@ -165,7 +161,9 @@ export function AppShellLayout() {
       </AppShell.Navbar>
 
       <AppShell.Main>
-        <Outlet />
+        <div className="page-shell">
+          <Outlet />
+        </div>
       </AppShell.Main>
     </AppShell>
   );
