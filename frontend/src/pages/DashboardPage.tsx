@@ -24,6 +24,7 @@ import {
   IconCircleCheck,
   IconClockHour4,
   IconInfoCircle,
+  IconProgress,
   IconTrendingUp,
 } from '@tabler/icons-react';
 import dayjs from 'dayjs';
@@ -120,12 +121,13 @@ export function DashboardPage() {
 
       {dashboardQuery.isError && <Alert color="red" icon={<IconInfoCircle size={18} />}>We couldn&apos;t load your dashboard yet. Refresh the page or check your session.</Alert>}
 
-      <SimpleGrid cols={{ base: 1, xs: 2, xl: 4 }}>
-        {isLoading ? Array.from({ length: 4 }, (_, index) => <Skeleton key={index} height={150} radius="md" />) : (
+      <SimpleGrid cols={{ base: 1, xs: 2, xl: 5 }}>
+        {isLoading ? Array.from({ length: 5 }, (_, index) => <Skeleton key={index} height={150} radius="md" />) : (
           <>
             <MetricCard label="Hours logged" value={formatHours(dashboard?.total_hours)} helper={`${formatHours(currentMonth?.total_hours)} this month`} icon={<IconClockHour4 size={18} />} />
             <MetricCard label="Overtime" value={formatHours(dashboard?.total_overtime)} helper={`${formatHours(currentMonth?.overtime_hours)} this month`} icon={<IconTrendingUp size={18} />} accent="cyan" />
             <MetricCard label="Completed" value={`${dashboard?.total_done ?? 0}`} helper={`${currentMonth?.done ?? 0} completed this month`} icon={<IconCircleCheck size={18} />} accent="teal" progress={completion} />
+            <MetricCard label="In progress" value={`${dashboard?.total_in_progress ?? 0}`} helper={`${currentMonth?.in_progress ?? 0} this month`} icon={<IconProgress size={18} />} accent="grape" />
             <MetricCard label="Missing days" value={`${currentMonth?.missing ?? 0}`} helper="Requires review this month" icon={<IconAlertTriangle size={18} />} accent="orange" />
           </>
         )}
@@ -168,6 +170,55 @@ export function DashboardPage() {
           )}
         </Card>
       </SimpleGrid>
+
+      <Card padding="xl" className="surface-card">
+        <Group justify="space-between" mb="xl">
+          <div><Title order={3}>Monthly breakdown</Title><Text size="sm" c="dimmed">Done, in-progress, missing, and man-day counts per month — open a month to review its work log</Text></div>
+          <ThemeIcon variant="light" color="indigo" size={38} radius="md"><IconCalendarStats size={20} /></ThemeIcon>
+        </Group>
+        {isLoading ? (
+          <Stack gap="sm">{Array.from({ length: 6 }, (_, index) => <Skeleton key={index} height={32} />)}</Stack>
+        ) : (
+          <Table verticalSpacing="sm" highlightOnHover>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>Month</Table.Th>
+                <Table.Th ta="right">Hours</Table.Th>
+                <Table.Th ta="right">Done</Table.Th>
+                <Table.Th ta="right">In progress</Table.Th>
+                <Table.Th ta="right">Missing</Table.Th>
+                <Table.Th ta="right">Man day</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {(dashboard?.months ?? []).map((item) => {
+                const monthValue = dayjs(`${dashboard?.year}-${item.month}-01`).format('YYYY-MM');
+                return (
+                  <Table.Tr
+                    key={item.month}
+                    onClick={() => {
+                      setSelectedMonth(monthValue);
+                      navigate('/worklog', { state: { month: monthValue } });
+                    }}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <Table.Td><Text size="sm" fw={item.month === month ? 800 : 600}>{item.name}</Text></Table.Td>
+                    <Table.Td ta="right"><Text size="sm" fw={700}>{formatHours(item.total_hours)}</Text></Table.Td>
+                    <Table.Td ta="right"><Badge color="teal" variant="light">{item.done}</Badge></Table.Td>
+                    <Table.Td ta="right"><Badge color="grape" variant="light">{item.in_progress}</Badge></Table.Td>
+                    <Table.Td ta="right">
+                      {item.missing > 0
+                        ? <Badge color="red" variant="light">{item.missing}</Badge>
+                        : <Text size="xs" c="dimmed">0</Text>}
+                    </Table.Td>
+                    <Table.Td ta="right"><Badge color="cyan" variant="light">{item.man_day}</Badge></Table.Td>
+                  </Table.Tr>
+                );
+              })}
+            </Table.Tbody>
+          </Table>
+        )}
+      </Card>
 
       <Card padding="lg" className="insight-banner">
         <Group align="flex-start" wrap="nowrap"><ThemeIcon color="cyan" variant="light" size={38} radius="md"><IconInfoCircle size={20} /></ThemeIcon><div><Text fw={800}>Keep the record complete</Text><Text size="sm" c="dimmed" mt={3}>Consistent daily entries make team capacity, overtime, and delivery reporting more reliable.</Text></div></Group>

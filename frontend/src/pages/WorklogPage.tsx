@@ -17,6 +17,7 @@ import {
 } from '@mantine/core';
 import { IconClock, IconEdit, IconInfoCircle, IconPlus, IconRefresh, IconTrash } from '@tabler/icons-react';
 import dayjs from 'dayjs';
+import { useLocation } from 'react-router';
 
 import { worklogsApi } from '../api/worklogs';
 import { projectsApi } from '../api/projects';
@@ -50,7 +51,12 @@ function toPayload(memberId: EmployeeId, draft: WorklogDraft): WorklogWrite {
 export function WorklogPage() {
   const { selectedMemberId } = useWorkspace();
   const queryClient = useQueryClient();
-  const [selectedMonth, setSelectedMonth] = useState(dayjs().format('YYYY-MM'));
+  const location = useLocation();
+  // The dashboard's monthly breakdown table links here with a target month
+  // (e.g. clicking "March" jumps straight to March's log instead of today's).
+  const [selectedMonth, setSelectedMonth] = useState(
+    () => (location.state as { month?: string } | null)?.month ?? dayjs().format('YYYY-MM'),
+  );
   const [view, setView] = useState<'table' | 'calendar'>('table');
   const [year, month] = selectedMonth.split('-').map(Number);
   const [panelOpen, setPanelOpen] = useState(false);
