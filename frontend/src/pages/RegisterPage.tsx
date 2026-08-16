@@ -2,10 +2,8 @@ import { useState } from 'react';
 import {
   Alert,
   Anchor,
-  Box,
   Button,
   Card,
-  Center,
   Group,
   PasswordInput,
   Stack,
@@ -20,6 +18,7 @@ import { Link } from 'react-router';
 import { authApi } from '../api/auth';
 import type { EmployeeLookup } from '../api/auth';
 import { ApiError } from '../api/http';
+import { AuthLayout } from '../components/AuthLayout';
 
 export function RegisterPage() {
   const [lookup, setLookup] = useState<EmployeeLookup | null>(null);
@@ -84,8 +83,8 @@ export function RegisterPage() {
 
   if (submitted) {
     return (
-      <Center mih="100vh" p="md">
-        <Card padding="lg" w={420} maw="100%">
+      <AuthLayout>
+        <Card padding="xl" maw={420} mx="auto" className="auth-form-card">
           <Stack align="center" gap="sm">
             <IconCircleCheck size={44} color="var(--mantine-color-teal-6)" />
             <Title order={3}>Request submitted</Title>
@@ -98,22 +97,20 @@ export function RegisterPage() {
             </Anchor>
           </Stack>
         </Card>
-      </Center>
+      </AuthLayout>
     );
   }
 
   return (
-    <Center mih="100vh" p="md">
-      <Box w={440} maw="100%">
-        <Stack gap="lg">
-          <Stack gap={4} align="center">
-            <Title order={2}>Request an account</Title>
-            <Text c="dimmed" size="sm">
-              Your name and department come from the HR record
-            </Text>
-          </Stack>
+    <AuthLayout>
+      <Stack gap="xl" maw={440} mx="auto">
+        <Stack gap={5}>
+          <Text size="xs" fw={800} tt="uppercase" lts="0.12em" c="indigo">New to Meter Worklog</Text>
+          <Title order={2} className="auth-form-title">Request an account</Title>
+          <Text c="dimmed" size="sm">Your name and department come from the HR record.</Text>
+        </Stack>
 
-          <Card padding="lg">
+          <Card padding="xl" className="auth-form-card">
             <form onSubmit={handleSubmit}>
               <Stack>
                 {error && (
@@ -178,8 +175,7 @@ export function RegisterPage() {
               </Stack>
             </form>
           </Card>
-        </Stack>
-      </Box>
-    </Center>
+      </Stack>
+    </AuthLayout>
   );
 }

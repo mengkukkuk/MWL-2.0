@@ -196,10 +196,15 @@ export interface ProjectDescription {
 
 // ── /api/employees and /api/members ──────────────────────────────────────────
 export interface Employee {
-  EmployeeID: EmployeeId;
-  EmployeeName: string | null;
-  Department: string | null;
-  Position: string | null;
+  /** `/api/employees` is intentionally shaped like the legacy `/api/members` DTO. */
+  id: EmployeeId;
+  name: string | null;
+  department: string | null;
+  staff_id: EmployeeId;
+  position: string | null;
+  level: string | null;
+  jg: string | null;
+  avatar_url: string | null;
   [key: string]: unknown;
 }
 
