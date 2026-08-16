@@ -22,9 +22,10 @@ import dayjs from 'dayjs';
 import { worklogsApi } from '../api/worklogs';
 import { projectsApi } from '../api/projects';
 import { PageHeader } from '../components/PageHeader';
+import { PeriodSelect } from '../components/PeriodSelect';
 import { WorklogCalendar } from '../components/WorklogCalendar';
 import type { Worklog, WorklogStatus, WorklogWrite } from '../types/api';
-import { formatHours, recentMonths } from '../utils/dates';
+import { formatHours } from '../utils/dates';
 import { notifyError, notifySuccess } from '../utils/notify';
 import { useWorkspace } from '../workspace/WorkspaceContext';
 
@@ -57,7 +58,6 @@ export function WorklogPage() {
   const [view, setView] = useState<'table' | 'calendar'>('table');
   const [year, month] = selectedMonth.split('-').map(Number);
   const [rows, setRows] = useState<EditableWorklog[]>([]);
-  const months = recentMonths(24);
   const worklogsQuery = useQuery({ queryKey: ['worklogs', selectedMemberId, selectedMonth], queryFn: () => worklogsApi.list(selectedMemberId!, year, month), enabled: !!selectedMemberId });
   const holidaysQuery = useQuery({ queryKey: ['holidays', year, month], queryFn: () => worklogsApi.holidays(year, month) });
   const descriptionsQuery = useQuery({ queryKey: ['project-descriptions'], queryFn: projectsApi.descriptions });
@@ -119,7 +119,7 @@ export function WorklogPage() {
               data={[{ value: 'table', label: 'Table' }, { value: 'calendar', label: 'Calendar' }]}
               size="sm"
             />
-            <Select value={selectedMonth} onChange={(value) => value && setSelectedMonth(value)} data={months.map((item) => ({ value: item.value, label: item.label }))} w={190} allowDeselect={false} aria-label="Month" />
+            <PeriodSelect value={selectedMonth} onChange={setSelectedMonth} />
           </div>
           <div className="toolbar-actions">
             <Badge variant="light" color="indigo">{rows.length} entries</Badge>
