@@ -472,8 +472,17 @@ select {
   background: #f8faff;
 }
 
+.worklog-table thead th {
+  border-bottom: 1px solid var(--workspace-line);
+}
+
 .worklog-table tbody tr td {
   vertical-align: middle;
+  border-bottom: 1px solid #eef1f8;
+}
+
+.worklog-table tbody tr:last-of-type td {
+  border-bottom: none;
 }
 
 .dropzone-shell {
@@ -490,15 +499,312 @@ select {
   transform: translateY(-1px);
 }
 
+.folder-tree-list {
+  min-width: 0;
+}
+
 .folder-tree-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 6px;
   border: 1px solid transparent;
   border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.folder-tree-item:hover {
+  background: #f4f6fd;
 }
 
 .folder-tree-item[data-active="true"] {
   border-color: #dfe4ff;
   background: #e9edff;
   color: #3949ab;
+}
+
+.folder-tree-item.drop-target {
+  border-color: #7182e5;
+  background: #e9edff;
+  box-shadow: 0 0 0 2px rgba(83, 101, 223, 0.18);
+}
+
+.folder-tree-toggle {
+  flex: 0 0 auto;
+  transition: transform 120ms ease;
+}
+
+.folder-tree-toggle[data-collapsed="true"] {
+  transform: rotate(0deg);
+}
+
+.folder-tree-toggle[data-collapsed="false"] {
+  transform: rotate(90deg);
+}
+
+.folder-tree-toggle-spacer {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 1px;
+}
+
+.folder-tree-icon {
+  flex: 0 0 auto;
+  color: #8a93b8;
+}
+
+.folder-tree-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.folder-tree-menu-btn {
+  flex: 0 0 auto;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.folder-tree-item:hover .folder-tree-menu-btn,
+.folder-tree-item:focus-within .folder-tree-menu-btn {
+  opacity: 1;
+}
+
+/* ── Subfolder cards ─────────────────────────────────────────────────────── */
+
+.subfolder-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 30px 10px 12px;
+  border: 1px solid #e8edf4;
+  border-radius: 12px;
+  background: #fbfcfe;
+  cursor: pointer;
+  transition: border-color 140ms ease, background-color 140ms ease, transform 140ms ease;
+}
+
+.subfolder-card:hover {
+  border-color: #c6d0f0;
+  background: #f8faff;
+  transform: translateY(-1px);
+}
+
+.subfolder-card.drop-target {
+  border-color: #7182e5;
+  background: #e9edff;
+  box-shadow: 0 0 0 2px rgba(83, 101, 223, 0.18);
+}
+
+.subfolder-card-icon {
+  flex: 0 0 auto;
+  color: #7182e5;
+}
+
+.subfolder-card-name {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.subfolder-card .mantine-ActionIcon-root {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+}
+
+/* ── File rows / drag state ──────────────────────────────────────────────── */
+
+.file-row-name-link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.file-row-name-link:hover {
+  color: #3949ab;
+  text-decoration: underline;
+}
+
+tr.row-selected {
+  background: #f1f4ff;
+}
+
+/* ── External-drag-to-upload overlay ─────────────────────────────────────── */
+
+.file-share-dnd-root {
+  position: relative;
+}
+
+.file-share-drop-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 2px dashed #7182e5;
+  border-radius: 16px;
+  background: rgba(233, 237, 255, 0.92);
+  color: #3949ab;
+  pointer-events: none;
+}
+
+/* ── Move to… picker ─────────────────────────────────────────────────────── */
+
+.move-picker {
+  border: 1px solid var(--workspace-line);
+  border-radius: 12px;
+  padding: 6px;
+}
+
+.move-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.move-option:hover:not(:disabled) {
+  background: #f4f6fd;
+}
+
+.move-option:disabled {
+  color: #b7bfd4;
+  cursor: not-allowed;
+}
+
+.move-option.selected {
+  border-color: #dfe4ff;
+  background: #e9edff;
+  color: #3949ab;
+}
+
+.move-option-icon {
+  flex: 0 0 auto;
+  color: #8a93b8;
+}
+
+.move-option-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.move-option-note {
+  flex: 0 0 auto;
+  color: var(--workspace-muted);
+  font-size: 0.72rem;
+}
+
+/* ── File preview modal ──────────────────────────────────────────────────── */
+
+.file-preview-body {
+  min-height: 220px;
+}
+
+.file-preview-body.doc-mode {
+  border: 1px solid var(--workspace-line);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.file-preview-image-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-height: 70vh;
+  overflow: auto;
+  border-radius: 12px;
+  background: #f4f6fb;
+}
+
+.file-preview-img {
+  max-width: 100%;
+  max-height: 70vh;
+  cursor: zoom-in;
+  object-fit: contain;
+}
+
+.file-preview-image-wrap.zoomed .file-preview-img {
+  max-width: none;
+  max-height: none;
+  cursor: zoom-out;
+}
+
+.file-preview-pdf {
+  width: 100%;
+  height: 72vh;
+  border: none;
+}
+
+.file-preview-docx {
+  padding: 16px;
+  background: #fff;
+}
+
+.file-preview-pptx {
+  width: 100%;
+  height: 72vh;
+}
+
+.file-preview-text {
+  padding: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.xlsx-tabs {
+  padding: 8px;
+  border-bottom: 1px solid var(--workspace-line);
+  background: #fafbfe;
+}
+
+.xlsx-sheet-panel {
+  padding: 12px;
+  overflow: auto;
+}
+
+.xlsx-sheet-panel table {
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.xlsx-sheet-panel table td,
+.xlsx-sheet-panel table th {
+  border: 1px solid #e8edf4;
+  padding: 4px 8px;
+}
+
+/* ── Upload panel ────────────────────────────────────────────────────────── */
+
+.upload-panel {
+  position: sticky;
+  bottom: 16px;
+  z-index: 10;
+}
+
+.upload-row {
+  padding: 8px 10px;
+  border: 1px solid #e8edf4;
+  border-radius: 10px;
+  background: #fbfcfe;
 }
 
 .recent-file {
@@ -734,6 +1040,71 @@ select {
 
 .row-dirty td:first-of-type {
   box-shadow: inset 3px 0 0 0 var(--mantine-color-yellow-6);
+}
+
+/* Worklog table rows open the edit panel on click, so they need to read as
+   pressable: pointer cursor plus a leading rail that only appears on
+   editable rows, echoing the coverage-rail language used elsewhere. Locked
+   rows stay flat and keep the default cursor. */
+.worklog-row {
+  position: relative;
+}
+
+.worklog-row[data-editable] {
+  cursor: pointer;
+}
+
+.worklog-row[data-editable]:hover td {
+  background: #f3f5ff;
+}
+
+.worklog-row[data-editable] td:first-of-type {
+  box-shadow: inset 3px 0 0 0 transparent;
+  transition: box-shadow var(--motion-quick) var(--motion-ease);
+}
+
+.worklog-row[data-editable]:hover td:first-of-type {
+  box-shadow: inset 3px 0 0 0 var(--workspace-indigo);
+}
+
+.worklog-time {
+  color: #44516a;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* Status badges share one accent language with the calendar view
+   (STATUS_ACCENT in WorklogCalendar.tsx) so the same word means the same
+   colour on both screens. */
+.status-badge {
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.status-badge.status-done {
+  color: var(--coverage-complete);
+  background: var(--coverage-complete-soft);
+}
+
+.status-badge.status-in-progress {
+  color: var(--workspace-indigo);
+  background: rgba(83, 101, 223, 0.12);
+}
+
+.status-badge.status-pending {
+  color: var(--coverage-partial);
+  background: var(--coverage-partial-soft);
+}
+
+.status-badge.status-man-day {
+  color: var(--workspace-cyan);
+  background: rgba(53, 181, 206, 0.14);
+}
+
+.status-badge.status-leave {
+  color: #6b7690;
+  background: var(--coverage-none);
+  background: rgba(195, 203, 219, 0.35);
 }
 
 /* ── Team overview ──────────────────────────────────────────────────────────
