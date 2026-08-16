@@ -19,7 +19,7 @@ import { Navigate, useNavigate, useSearchParams } from 'react-router';
 import { authApi } from '../api/auth';
 import { ApiError } from '../api/http';
 import { useAuth } from '../auth/AuthContext';
-import { AuthLayout } from '../components/AuthLayout';
+import { AuthBrandHeader, AuthLayout } from '../components/AuthLayout';
 import { safeNextPath } from '../utils/nextUrl';
 import { notifySuccess } from '../utils/notify';
 import type { AccountStatusBody, LockoutBody } from '../types/api';
@@ -123,16 +123,20 @@ export function LoginPage() {
 
   return (
     <AuthLayout>
-      <Stack gap="xl" maw={400} mx="auto" className="auth-form-content">
+      <Stack gap="xl" className="auth-form-content auth-login-content">
+        <AuthBrandHeader />
+
+        <Divider className="auth-login-divider" />
+
         <Stack gap={5}>
-          <Text size="xs" fw={800} tt="uppercase" lts="0.12em" c="indigo">Welcome back</Text>
-          <Title order={2} className="auth-form-title">Sign in to your workspace</Title>
-          <Text c="dimmed" size="sm">Pick up where you left off with your team’s worklog.</Text>
+          <Text size="xs" fw={800} tt="uppercase" lts="0.14em" className="auth-login-eyebrow">Enterprise access</Text>
+          <Title order={2} className="auth-form-title">Sign in</Title>
+          <Text c="dimmed" size="sm">Use your workspace credentials to continue.</Text>
         </Stack>
 
-          <Card padding="xl" className="auth-form-card">
+          <Card padding={0} className="auth-form-card auth-login-card">
             <form onSubmit={handleSubmit}>
-              <Stack>
+              <Stack gap="md">
                 {outcome.kind === 'invalid' && (
                   <Alert color="red" icon={<IconAlertCircle size={16} />} variant="light">
                     {outcome.message}
@@ -167,7 +171,7 @@ export function LoginPage() {
                   Sign in
                 </Button>
 
-                <Divider />
+                <Divider className="auth-login-divider" />
 
                 <Group justify="space-between">
                   <Anchor component="button" type="button" size="xs" onClick={handleForgot}>

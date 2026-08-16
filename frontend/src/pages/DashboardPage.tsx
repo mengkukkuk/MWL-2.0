@@ -39,7 +39,7 @@ import { useNavigate } from 'react-router';
 import { useWorkspace } from '../workspace/WorkspaceContext';
 
 export function DashboardPage() {
-  const { user, isElevated } = useAuth();
+  const { isElevated } = useAuth();
   const { selectedMemberId, setSelectedMemberId } = useWorkspace();
   const navigate = useNavigate();
   const [view, setView] = useState<'me' | 'team'>('me');
@@ -70,10 +70,10 @@ export function DashboardPage() {
   return (
     <Stack gap="xl">
       <PageHeader
-        eyebrow={view === 'team' ? 'Team coverage' : 'Operations overview'}
+        eyebrow={view === 'team' ? 'Team coverage' : 'Overview'}
         title={view === 'team'
           ? `Who still has gaps in ${dayjs(selectedMonth).format('MMMM')}?`
-          : `Good to see you, ${dashboard?.member.name?.split(' ')[0] ?? user?.username ?? 'there'}.`}
+          : `Overview of ${dayjs(selectedMonth).format('MMMM')} ${year}`}
         description={view === 'team'
           ? 'Every member’s month at a glance. Cards are ordered by who needs attention first — open one to see their full record.'
           : 'A focused view of your time, delivery progress, and the work that needs attention next.'}

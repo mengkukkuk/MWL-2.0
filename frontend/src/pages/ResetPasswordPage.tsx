@@ -5,6 +5,7 @@ import {
   Button,
   Card,
   Center,
+  Divider,
   Loader,
   PasswordInput,
   Stack,
@@ -17,7 +18,7 @@ import { Link, useSearchParams } from 'react-router';
 
 import { authApi } from '../api/auth';
 import { ApiError } from '../api/http';
-import { AuthLayout } from '../components/AuthLayout';
+import { AuthBrandHeader, AuthLayout } from '../components/AuthLayout';
 
 export function ResetPasswordPage() {
   const [params] = useSearchParams();
@@ -71,12 +72,20 @@ export function ResetPasswordPage() {
 
   return (
     <AuthLayout>
-      <Card padding="xl" maw={400} mx="auto" className="auth-form-card">
-        <Stack>
-          <Text size="xs" fw={800} tt="uppercase" lts="0.12em" c="indigo">Account recovery</Text>
-          <Title order={3} className="auth-form-title">
+      <Stack gap="xl" className="auth-form-content auth-login-content">
+        <AuthBrandHeader />
+        <Divider className="auth-login-divider" />
+
+        <Stack gap={5}>
+          <Text size="xs" fw={800} tt="uppercase" lts="0.14em" className="auth-login-eyebrow">Account recovery</Text>
+          <Title order={2} className="auth-form-title">
             Reset password
           </Title>
+          <Text c="dimmed" size="sm">Securely restore access to your workspace.</Text>
+        </Stack>
+
+        <Card padding={0} className="auth-form-card auth-login-card">
+          <Stack gap="md">
 
           {state === 'checking' && (
             <Center py="lg">
@@ -98,7 +107,8 @@ export function ResetPasswordPage() {
           {state === 'done' && (
             <>
               <Stack align="center" gap="xs">
-                <IconCircleCheck size={44} color="var(--mantine-color-teal-6)" />
+                <div className="auth-success-icon"><IconCircleCheck size={28} /></div>
+                <Text fw={750}>Password updated</Text>
                 <Text size="sm" c="dimmed" ta="center">
                   Your password has been changed. Any login lockout has been cleared.
                 </Text>
@@ -127,6 +137,7 @@ export function ResetPasswordPage() {
           )}
         </Stack>
       </Card>
+      </Stack>
     </AuthLayout>
   );
 }

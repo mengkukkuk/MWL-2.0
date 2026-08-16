@@ -4,6 +4,7 @@ import {
   Anchor,
   Button,
   Card,
+  Divider,
   Group,
   PasswordInput,
   Stack,
@@ -18,7 +19,7 @@ import { Link } from 'react-router';
 import { authApi } from '../api/auth';
 import type { EmployeeLookup } from '../api/auth';
 import { ApiError } from '../api/http';
-import { AuthLayout } from '../components/AuthLayout';
+import { AuthBrandHeader, AuthLayout } from '../components/AuthLayout';
 
 export function RegisterPage() {
   const [lookup, setLookup] = useState<EmployeeLookup | null>(null);
@@ -84,48 +85,55 @@ export function RegisterPage() {
   if (submitted) {
     return (
       <AuthLayout>
-        <Card padding="xl" maw={420} mx="auto" className="auth-form-card">
-          <Stack align="center" gap="sm">
-            <IconCircleCheck size={44} color="var(--mantine-color-teal-6)" />
-            <Title order={3}>Request submitted</Title>
-            <Text c="dimmed" size="sm" ta="center">
-              Your account is pending approval by an administrator. You will be able to sign in once
-              it has been approved.
-            </Text>
-            <Anchor component={Link} to="/login" size="sm">
-              Back to sign in
-            </Anchor>
-          </Stack>
-        </Card>
+        <Stack gap="xl" className="auth-form-content auth-login-content">
+          <AuthBrandHeader />
+          <Divider className="auth-login-divider" />
+          <Card padding={0} className="auth-form-card auth-login-card">
+            <Stack align="center" gap="sm" py="md">
+              <div className="auth-success-icon"><IconCircleCheck size={28} /></div>
+              <Title order={2} className="auth-form-title">Request submitted</Title>
+              <Text c="dimmed" size="sm" ta="center" maw={360}>
+                Your account is pending administrator approval. You can sign in as soon as access is granted.
+              </Text>
+              <Anchor component={Link} to="/login" size="sm" mt="xs">
+                Back to sign in
+              </Anchor>
+            </Stack>
+          </Card>
+        </Stack>
       </AuthLayout>
     );
   }
 
   return (
-    <AuthLayout>
-      <Stack gap="xl" maw={440} mx="auto">
+    <AuthLayout size="wide">
+      <Stack gap="xl" className="auth-form-content auth-login-content auth-register-content">
+        <AuthBrandHeader />
+        <Divider className="auth-login-divider" />
+
         <Stack gap={5}>
-          <Text size="xs" fw={800} tt="uppercase" lts="0.12em" c="indigo">New to Meter Worklog</Text>
+          <Text size="xs" fw={800} tt="uppercase" lts="0.14em" className="auth-login-eyebrow">Identity enrollment</Text>
           <Title order={2} className="auth-form-title">Request an account</Title>
           <Text c="dimmed" size="sm">Your name and department come from the HR record.</Text>
         </Stack>
 
-          <Card padding="xl" className="auth-form-card">
+          <Card padding={0} className="auth-form-card auth-login-card">
             <form onSubmit={handleSubmit}>
-              <Stack>
+              <Stack gap="md">
                 {error && (
                   <Alert color="red" icon={<IconAlertCircle size={16} />} variant="light">
                     {error}
                   </Alert>
                 )}
 
-                <Group align="flex-end" gap="xs" wrap="nowrap">
+                <Group align="flex-end" gap="xs" wrap="nowrap" className="auth-employee-row">
                   <TextInput
                     label="Employee ID"
                     style={{ flex: 1 }}
                     {...form.getInputProps('employee_id')}
                   />
                   <Button
+                    type="button"
                     variant="light"
                     onClick={runLookup}
                     loading={looking}
@@ -156,18 +164,22 @@ export function RegisterPage() {
                   </Alert>
                 )}
 
-                <TextInput label="Username" {...form.getInputProps('username')} />
-                <TextInput
-                  label="Email"
-                  description="Optional - used only for password resets"
-                  {...form.getInputProps('email')}
-                />
-                <PasswordInput label="Password" {...form.getInputProps('password')} />
-                <PasswordInput label="Confirm password" {...form.getInputProps('confirm')} />
+                <div className="auth-register-grid">
+                  <TextInput label="Username" {...form.getInputProps('username')} />
+                  <TextInput
+                    label="Email"
+                    description="Optional — used for password resets"
+                    {...form.getInputProps('email')}
+                  />
+                  <PasswordInput label="Password" {...form.getInputProps('password')} />
+                  <PasswordInput label="Confirm password" {...form.getInputProps('confirm')} />
+                </div>
 
                 <Button type="submit" loading={submitting} fullWidth mt="xs">
                   Submit request
                 </Button>
+
+                <Divider className="auth-login-divider" />
 
                 <Anchor component={Link} to="/login" size="xs" ta="center">
                   Already have an account? Sign in
