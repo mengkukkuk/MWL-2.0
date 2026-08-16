@@ -81,7 +81,10 @@ export function LoginPage() {
       if (err.status === 429) {
         const body = err.payload as Partial<LockoutBody> | undefined;
         setOutcome({ kind: 'locked', seconds: Math.max(1, Number(body?.locked_for_seconds ?? 60)) });
-      } else if (err.status === 403) {
+      } else if (err.status === 403 && (
+        (err.payload as Partial<AccountStatusBody> | undefined)?.error === 'pending_approval' ||
+        (err.payload as Partial<AccountStatusBody> | undefined)?.error === 'declined'
+      )) {
         const body = err.payload as Partial<AccountStatusBody> | undefined;
         setOutcome({
           kind: 'blocked',

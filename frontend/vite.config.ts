@@ -1,12 +1,14 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
+import { cloudflare } from "@cloudflare/vite-plugin";
+
 // The Flask origin. Everything is served same-origin in production; in dev the
 // proxy below makes the browser believe that is true here too.
 const BACKEND = process.env.VITE_BACKEND_ORIGIN ?? 'http://127.0.0.1:5112';
 
 export default defineConfig(({ command }) => ({
-  plugins: [react()],
+  plugins: [react(), cloudflare()],
   // Flask serves the production bundle from /static; Vite needs root-relative
   // module URLs in dev so BrowserRouter can own /login and the app routes.
   base: command === 'build' ? '/static/' : '/',
