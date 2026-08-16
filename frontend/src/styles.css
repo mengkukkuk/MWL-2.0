@@ -8,6 +8,23 @@
   --workspace-indigo: #5365df;
   --workspace-cyan: #35b5ce;
   --workspace-shadow: 0 16px 42px rgba(37, 52, 88, 0.07);
+
+  /* Coverage ramp. One status language for "is this month accounted for?",
+     used by the team grid rails, the coverage bars and the calendar cells so
+     the same colour means the same thing on every screen. */
+  --coverage-complete: #2fb996;
+  --coverage-partial: #e2a33c;
+  --coverage-critical: #e0576b;
+  --coverage-none: #c3cbdb;
+  --coverage-complete-soft: rgba(47, 185, 150, 0.12);
+  --coverage-partial-soft: rgba(226, 163, 60, 0.14);
+  --coverage-critical-soft: rgba(224, 87, 107, 0.12);
+
+  /* Two durations, one easing. Every transition in this file uses these so
+     hover feedback is consistent instead of drifting per component. */
+  --motion-quick: 130ms;
+  --motion-settle: 220ms;
+  --motion-ease: cubic-bezier(0.2, 0.7, 0.3, 1);
 }
 
 html,
@@ -31,6 +48,73 @@ input,
 textarea,
 select {
   font: inherit;
+}
+
+/* Timesheets are read column-wise. Proportional digits make "112.5" and
+   "98.0" different widths and the eye loses the column, so every number the
+   user compares is set in tabular figures. */
+.metric-value,
+.coverage-count,
+.member-stat-value,
+.calendar-day-number,
+.calendar-cell-hours,
+.worklog-table td {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* One visible focus treatment for every interactive surface. Mantine ships
+   its own for its components; this covers the bare elements this app adds. */
+.member-card:focus-visible,
+.calendar-cell:focus-visible,
+.month-chip:focus-visible,
+.month-tab:focus-visible {
+  outline: 2px solid var(--workspace-indigo);
+  outline-offset: 2px;
+}
+
+/* Buttons sit on a shared baseline wherever they are grouped, and lift on
+   hover by the same amount. Previously each toolbar set its own alignment. */
+.mantine-Button-root,
+.mantine-ActionIcon-root {
+  transition:
+    transform var(--motion-quick) var(--motion-ease),
+    box-shadow var(--motion-quick) var(--motion-ease),
+    background-color var(--motion-quick) var(--motion-ease);
+}
+
+.mantine-Button-root:not(:disabled):hover,
+.mantine-ActionIcon-root:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+.mantine-Button-root:not(:disabled):active,
+.mantine-ActionIcon-root:not(:disabled):active {
+  transform: translateY(0);
+}
+
+/* A toolbar row: controls on the left, actions hard-right, all centred on one
+   axis and wrapping as a block on narrow screens. */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.toolbar-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
 }
 
 .app-shell {
@@ -158,7 +242,11 @@ select {
   box-shadow: var(--workspace-shadow);
 }
 
+/* These host horizontal scrollers (the calendar grid, the worklog table).
+   min-width:0 stops the scroller's intrinsic width from leaking out through the
+   card and widening the page instead of scrolling inside it. */
 .surface-card {
+  min-width: 0;
   overflow: hidden;
 }
 
@@ -248,10 +336,12 @@ select {
 }
 
 .table-card {
+  min-width: 0;
   overflow: hidden;
 }
 
 .table-scroll {
+  min-width: 0;
   overflow-x: auto;
 }
 
@@ -534,4 +624,474 @@ select {
 
 .row-dirty td:first-of-type {
   box-shadow: inset 3px 0 0 0 var(--mantine-color-yellow-6);
+}
+
+/* ── Team overview ──────────────────────────────────────────────────────────
+   The grid answers one question: who has gaps this month. Every card carries a
+   coverage rail on its leading edge, so a column of colour reads down the page
+   before any text does. `--rail` is set by the data-state attribute and is the
+   only colour the card varies — the rest stays deliberately quiet. */
+
+.team-grid {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 16px;
+}
+
+/* Long Thai names and project lists must ellipsis rather than widen the track. */
+.team-grid > * {
+  min-width: 0;
+}
+
+.member-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  width: 100%;
+  padding: 17px 17px 15px 23px;
+  overflow: hidden;
+  border: 1px solid var(--workspace-line);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: var(--workspace-shadow);
+  text-align: left;
+  transition:
+    transform var(--motion-quick) var(--motion-ease),
+    box-shadow var(--motion-quick) var(--motion-ease),
+    border-color var(--motion-quick) var(--motion-ease);
+}
+
+/* Full height, not inset: at a glance the rails form one continuous column of
+   colour down the grid, which is the only thing that has to be readable from
+   across the room. The card's overflow:hidden clips it to the corner radius. */
+.member-card::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 5px;
+  background: var(--rail, var(--coverage-none));
+  content: "";
+  transition: width var(--motion-quick) var(--motion-ease);
+}
+
+.member-card:hover,
+.member-card:focus-visible {
+  transform: translateY(-3px);
+  border-color: #d6ddf1;
+  box-shadow: 0 20px 44px rgba(37, 52, 88, 0.13);
+}
+
+/* The rail thickens on hover — the card confirms which band of colour you are
+   pointing at without moving any content. */
+.member-card:hover::before,
+.member-card:focus-visible::before {
+  width: 9px;
+}
+
+.member-card[data-state="complete"] { --rail: var(--coverage-complete); }
+.member-card[data-state="partial"] { --rail: var(--coverage-partial); }
+.member-card[data-state="critical"] { --rail: var(--coverage-critical); }
+.member-card[data-state="none"] { --rail: var(--coverage-none); }
+
+.member-card[data-selected="true"] {
+  border-color: #c3ccf6;
+  box-shadow: 0 0 0 2px rgba(83, 101, 223, 0.16), var(--workspace-shadow);
+}
+
+.member-identity {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  min-width: 0;
+}
+
+.member-identity-copy {
+  min-width: 0;
+}
+
+.member-name {
+  overflow: hidden;
+  font-weight: 750;
+  font-size: 0.94rem;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.member-position {
+  overflow: hidden;
+  color: var(--workspace-muted);
+  font-size: 0.76rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.coverage-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.coverage-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.micro-label {
+  color: #96a1b5;
+  font-weight: 800;
+  font-size: 10px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.coverage-count {
+  color: var(--workspace-ink);
+  font-weight: 750;
+  font-size: 0.78rem;
+}
+
+.coverage-track {
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #edf0f6;
+}
+
+.coverage-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--rail, var(--coverage-none));
+  transition: width var(--motion-settle) var(--motion-ease);
+}
+
+.member-stats {
+  display: flex;
+  gap: 18px;
+}
+
+.member-stat-value {
+  font-weight: 750;
+  font-size: 0.92rem;
+  line-height: 1.2;
+}
+
+.member-stat-value[data-tone="critical"] { color: var(--coverage-critical); }
+.member-stat-value[data-tone="complete"] { color: var(--coverage-complete); }
+
+.member-meta {
+  display: grid;
+  gap: 5px;
+  padding-top: 11px;
+  border-top: 1px solid #eff2f7;
+}
+
+.member-meta-row {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 8px;
+  align-items: baseline;
+}
+
+.member-meta-value {
+  overflow: hidden;
+  color: #4a566d;
+  font-size: 0.76rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Sits inside a .member-meta-row value cell so skills keep the same label
+   column as Main/Support instead of starting flush at the card edge. */
+.skill-row {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.skill-row .member-meta-value {
+  min-width: 0;
+}
+
+.skill-pips {
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: 3px;
+}
+
+.skill-pip {
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  background: #e3e8f1;
+}
+
+.skill-pip[data-on="true"] {
+  background: var(--workspace-indigo);
+}
+
+/* Cards fade in on load, staggered by index via an inline custom property.
+   Capped in the component so a 25-member roster does not crawl in. */
+.member-card {
+  animation: card-in var(--motion-settle) var(--motion-ease) both;
+  animation-delay: var(--card-delay, 0ms);
+}
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.team-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--workspace-muted);
+  font-size: 0.76rem;
+  font-weight: 650;
+  /* Wrap between items, never inside one, so a swatch never separates from its
+     label on a narrow screen. */
+  white-space: nowrap;
+}
+
+.legend-swatch {
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  background: var(--swatch);
+}
+
+/* ── Worklog calendar ───────────────────────────────────────────────────────
+   Per-day data exists for one member at a time, so this is where the real day
+   grid lives (the team cards only have counts and must not imply day order). */
+
+/* min-width:0 is load-bearing: this sits inside flex/grid parents whose items
+   default to min-width:auto, which lets the 700px grid below push the whole
+   page wide instead of scrolling inside this box. */
+.calendar-scroll {
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.calendar-head,
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(96px, 1fr));
+  gap: 8px;
+  min-width: 700px;
+}
+
+.calendar-head {
+  margin-bottom: 8px;
+}
+
+/* Left-aligned to sit over the day numbers, which are also left-aligned. */
+.calendar-head span {
+  padding: 0 0 2px 9px;
+  color: #8b95a8;
+  font-weight: 800;
+  font-size: 10px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.calendar-cell {
+  display: flex;
+  min-height: 108px;
+  flex-direction: column;
+  gap: 5px;
+  padding: 7px 8px 8px;
+  border: 1px solid var(--workspace-line);
+  border-radius: 12px;
+  background: #fff;
+  text-align: left;
+  transition:
+    transform var(--motion-quick) var(--motion-ease),
+    box-shadow var(--motion-quick) var(--motion-ease),
+    border-color var(--motion-quick) var(--motion-ease);
+}
+
+.calendar-cell[data-outside="true"] {
+  border-color: #f0f3f8;
+  background: #fbfcfe;
+  opacity: 0.55;
+}
+
+.calendar-cell[data-weekend="true"] {
+  background: #f6f8fc;
+}
+
+.calendar-cell[data-holiday="true"] {
+  border-color: rgba(224, 87, 107, 0.24);
+  background: var(--coverage-critical-soft);
+}
+
+/* A working day with nothing logged is the thing the page exists to surface. */
+.calendar-cell[data-missing="true"] {
+  border-color: #ccd6e6;
+  border-style: dashed;
+}
+
+.calendar-cell[data-today="true"] {
+  box-shadow: inset 0 0 0 2px rgba(83, 101, 223, 0.35);
+}
+
+.calendar-cell:not([data-outside="true"]):hover {
+  z-index: 1;
+  transform: translateY(-2px);
+  border-color: #aeb9d8;
+  box-shadow: 0 10px 24px rgba(37, 52, 88, 0.12);
+}
+
+.calendar-cell-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.calendar-day-number {
+  color: var(--workspace-ink);
+  font-weight: 750;
+  font-size: 0.82rem;
+}
+
+.calendar-cell[data-outside="true"] .calendar-day-number {
+  color: var(--workspace-muted);
+  font-weight: 600;
+}
+
+.calendar-cell-hours {
+  color: #4a566d;
+  font-weight: 750;
+  font-size: 0.72rem;
+}
+
+.calendar-holiday-name {
+  overflow: hidden;
+  color: #b04257;
+  font-size: 0.68rem;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.calendar-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+  padding: 4px 6px;
+  border-left: 3px solid var(--entry-accent, var(--workspace-indigo));
+  border-radius: 4px 7px 7px 4px;
+  background: #f2f5fc;
+  cursor: pointer;
+  transition: background-color var(--motion-quick) var(--motion-ease);
+}
+
+.calendar-entry:hover {
+  background: #e8edfa;
+}
+
+.calendar-entry-code {
+  overflow: hidden;
+  font-weight: 700;
+  font-size: 0.68rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.calendar-entry-hours {
+  flex-shrink: 0;
+  color: var(--workspace-muted);
+  font-size: 0.66rem;
+  font-weight: 700;
+}
+
+.calendar-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-top: auto;
+  padding: 4px;
+  border-radius: 7px;
+  color: var(--workspace-indigo);
+  font-weight: 700;
+  font-size: 0.7rem;
+}
+
+/* Only hide the affordance where hover exists to reveal it. On touch there is
+   no hover, so it stays visible rather than becoming unreachable. */
+@media (hover: hover) {
+  .calendar-add {
+    opacity: 0;
+    transition: opacity var(--motion-quick) var(--motion-ease);
+  }
+
+  .calendar-cell:hover .calendar-add,
+  .calendar-cell:focus-visible .calendar-add,
+  .calendar-cell:focus-within .calendar-add {
+    opacity: 1;
+  }
+}
+
+.calendar-add:hover {
+  background: #eef1fd;
+}
+
+@media (max-width: 48em) {
+  .team-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .toolbar-actions {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .toolbar-actions > * {
+    flex: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .member-card:hover,
+  .calendar-cell:not([data-outside="true"]):hover,
+  .mantine-Button-root:not(:disabled):hover,
+  .mantine-ActionIcon-root:not(:disabled):hover {
+    transform: none;
+  }
 }

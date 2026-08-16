@@ -7,6 +7,7 @@ import {
   Button,
   Card,
   Group,
+  SegmentedControl,
   Select,
   Skeleton,
   Stack,
@@ -21,6 +22,7 @@ import dayjs from 'dayjs';
 import { worklogsApi } from '../api/worklogs';
 import { projectsApi } from '../api/projects';
 import { PageHeader } from '../components/PageHeader';
+import { WorklogCalendar } from '../components/WorklogCalendar';
 import type { Worklog, WorklogStatus, WorklogWrite } from '../types/api';
 import { formatHours, recentMonths } from '../utils/dates';
 import { notifyError, notifySuccess } from '../utils/notify';
@@ -52,6 +54,7 @@ export function WorklogPage() {
   const { selectedMemberId } = useWorkspace();
   const queryClient = useQueryClient();
   const [selectedMonth, setSelectedMonth] = useState(dayjs().format('YYYY-MM'));
+  const [view, setView] = useState<'table' | 'calendar'>('table');
   const [year, month] = selectedMonth.split('-').map(Number);
   const [rows, setRows] = useState<EditableWorklog[]>([]);
   const months = recentMonths(24);
@@ -87,11 +90,17 @@ export function WorklogPage() {
   });
 
   const updateRow = (id: number, patch: Partial<EditableWorklog>) => setRows((current) => current.map((row) => row.id === id ? { ...row, ...patch, dirty: true } : row));
-  const addRow = () => {
+  /**
+   * Adds a blank editable row. Called with a date from the calendar (that day)
+   * and without one from the toolbar (the 1st of the month). Always lands the
+   * user on the table, because that is where a row is filled in.
+   */
+  const addRow = (isoDate?: string) => {
     if (!selectedMemberId) return;
     const firstProject = descriptions[0]?.Description ?? '';
-    const date = `${selectedMonth}-01`;
+    const date = isoDate ?? `${selectedMonth}-01`;
     setRows((current) => [{ id: -Date.now(), member_id: selectedMemberId, log_date: date, project: firstProject, task: '', start_time: '09:00', end_time: '17:30', hours: null, regular_hours: null, OT1: null, OT1_5: null, OT3: null, status: 'In Progress', note: '', IsEditRow: 1, is_allowance: 0, project_description: firstProject, isNew: true, dirty: true }, ...current]);
+    setView('table');
   };
   const removeRow = (row: EditableWorklog) => {
     if (row.isNew) setRows((current) => current.filter((item) => item.id !== row.id));
@@ -100,15 +109,42 @@ export function WorklogPage() {
 
   return (
     <Stack gap="xl">
-      <PageHeader eyebrow="Daily capture" title="Worklog" description="Keep the operational record current with clear, lightweight daily entries." breadcrumb="Worklog" actions={<Button leftSection={<IconPlus size={17} />} onClick={addRow}>Add entry</Button>} />
+      <PageHeader eyebrow="Daily capture" title="Work log" description="Keep the operational record current with clear, lightweight daily entries." breadcrumb="Work log" actions={<Button leftSection={<IconPlus size={17} />} onClick={() => addRow()}>Add entry</Button>} />
       <Card padding="lg" className="filter-bar">
-        <Group justify="space-between" wrap="wrap" gap="md">
-          <Group gap="sm"><Text fw={800}>Month</Text><Select value={selectedMonth} onChange={(value) => value && setSelectedMonth(value)} data={months.map((item) => ({ value: item.value, label: item.label }))} w={190} allowDeselect={false} /></Group>
-          <Group gap="xs"><Badge variant="light" color="indigo">{rows.length} entries</Badge><Button variant="subtle" leftSection={<IconRefresh size={16} />} onClick={() => void worklogsQuery.refetch()}>Refresh</Button></Group>
-        </Group>
+        <div className="toolbar">
+          <div className="toolbar-group">
+            <SegmentedControl
+              value={view}
+              onChange={(value) => setView(value as 'table' | 'calendar')}
+              data={[{ value: 'table', label: 'Table' }, { value: 'calendar', label: 'Calendar' }]}
+              size="sm"
+            />
+            <Select value={selectedMonth} onChange={(value) => value && setSelectedMonth(value)} data={months.map((item) => ({ value: item.value, label: item.label }))} w={190} allowDeselect={false} aria-label="Month" />
+          </div>
+          <div className="toolbar-actions">
+            <Badge variant="light" color="indigo">{rows.length} entries</Badge>
+            <Button variant="subtle" leftSection={<IconRefresh size={16} />} onClick={() => void worklogsQuery.refetch()}>Refresh</Button>
+          </div>
+        </div>
       </Card>
       {descriptions.length === 0 && !descriptionsQuery.isLoading && <Alert color="orange" icon={<IconInfoCircle size={18} />}>No project descriptions are available. Ask an administrator to review project configuration before recording time.</Alert>}
       {worklogsQuery.isError && <Alert color="red" icon={<IconInfoCircle size={18} />}>Worklogs could not be loaded for this month.</Alert>}
+      {view === 'calendar' ? (
+        <Card padding="lg" className="surface-card">
+          {worklogsQuery.isLoading ? (
+            <Skeleton height={520} radius="md" />
+          ) : (
+            <WorklogCalendar
+              year={year}
+              month={month}
+              worklogs={rows}
+              holidays={holidaysQuery.data ?? []}
+              onAddEntry={addRow}
+              onSelectEntry={() => setView('table')}
+            />
+          )}
+        </Card>
+      ) : (
       <Card padding={0} className="surface-card table-card">
         <div className="table-scroll">
           <Table verticalSpacing="sm" horizontalSpacing="md" highlightOnHover className="worklog-table" miw={1060}>
@@ -135,7 +171,8 @@ export function WorklogPage() {
           </Table>
         </div>
       </Card>
-      <Group gap="xs"><IconInfoCircle size={16} color="var(--mantine-color-dimmed)" /><Text size="xs" c="dimmed">Hours and overtime are calculated by the server. Weekend and holiday rows are highlighted for review.</Text></Group>
+      )}
+      <Group gap="xs"><IconInfoCircle size={16} color="var(--mantine-color-dimmed)" /><Text size="xs" c="dimmed">Hours and overtime are calculated by the server. Weekends, holidays, and days with no entry are highlighted for review.</Text></Group>
     </Stack>
   );
 }

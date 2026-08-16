@@ -27,6 +27,35 @@ export function isWeekend(isoDate: string): boolean {
   return day === 0 || day === 6;
 }
 
+/**
+ * The days an entry is expected on: Mon-Fri, minus holidays.
+ *
+ * Mirrors `get_overall_missing` in app/worklogs.py exactly. That endpoint
+ * returns only the missing *count*, so the denominator has to be recomputed
+ * here — if the server's rule changes, this has to change with it.
+ */
+export function workingDaysInMonth(year: number, month: number, holidays: Set<string>): string[] {
+  return daysInMonth(year, month).filter((date) => !isWeekend(date) && !holidays.has(date));
+}
+
+/**
+ * Whole weeks covering the month, Monday-first, padded with the adjacent
+ * months' days so every row has seven cells.
+ */
+export function monthMatrix(year: number, month: number): { date: string; inMonth: boolean }[][] {
+  const start = monthStart(year, month);
+  // dayjs .day() is Sunday-indexed; shift so Monday === 0.
+  const leading = (start.day() + 6) % 7;
+  const gridStart = start.subtract(leading, 'day');
+  const weeks = Math.ceil((leading + start.daysInMonth()) / 7);
+  return Array.from({ length: weeks }, (_, week) =>
+    Array.from({ length: 7 }, (_, day) => {
+      const cell = gridStart.add(week * 7 + day, 'day');
+      return { date: cell.format(DATE_FMT), inMonth: cell.month() === month - 1 };
+    }),
+  );
+}
+
 export function prettyDate(isoDate: string): string {
   return dayjs(isoDate).format('ddd D MMM');
 }

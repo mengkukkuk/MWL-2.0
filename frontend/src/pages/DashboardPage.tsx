@@ -4,9 +4,11 @@ import {
   Alert,
   Anchor,
   Badge,
+  Button,
   Card,
   Group,
   Progress,
+  SegmentedControl,
   SimpleGrid,
   Skeleton,
   Stack,
@@ -31,14 +33,16 @@ import { useAuth } from '../auth/AuthContext';
 import { worklogsApi } from '../api/worklogs';
 import { PageHeader } from '../components/PageHeader';
 import { MetricCard } from '../components/MetricCard';
+import { TeamOverview } from '../components/TeamOverview';
 import { formatHours, recentMonths } from '../utils/dates';
 import { useNavigate } from 'react-router';
 import { useWorkspace } from '../workspace/WorkspaceContext';
 
 export function DashboardPage() {
-  const { user } = useAuth();
-  const { selectedMemberId } = useWorkspace();
+  const { user, isElevated } = useAuth();
+  const { selectedMemberId, setSelectedMemberId } = useWorkspace();
   const navigate = useNavigate();
+  const [view, setView] = useState<'me' | 'team'>('me');
   const [selectedMonth, setSelectedMonth] = useState(dayjs().format('YYYY-MM'));
   const [year, month] = selectedMonth.split('-').map(Number);
   const months = recentMonths(12);
@@ -67,22 +71,50 @@ export function DashboardPage() {
   return (
     <Stack gap="xl">
       <PageHeader
-        eyebrow="Operations overview"
-        title={`Good to see you, ${dashboard?.member.name?.split(' ')[0] ?? user?.username ?? 'there'}.`}
-        description="A focused view of your time, delivery progress, and the work that needs attention next."
+        eyebrow={view === 'team' ? 'Team coverage' : 'Operations overview'}
+        title={view === 'team'
+          ? `Who still has gaps in ${dayjs(selectedMonth).format('MMMM')}?`
+          : `Good to see you, ${dashboard?.member.name?.split(' ')[0] ?? user?.username ?? 'there'}.`}
+        description={view === 'team'
+          ? 'Every member’s month at a glance. Cards are ordered by who needs attention first — open one to see their full record.'
+          : 'A focused view of your time, delivery progress, and the work that needs attention next.'}
         actions={(
-          <Group>
+          <Group gap="sm" align="center" wrap="wrap">
+            {isElevated && (
+              <SegmentedControl
+                value={view}
+                onChange={(value) => setView(value as 'me' | 'team')}
+                data={[{ value: 'me', label: 'My view' }, { value: 'team', label: 'Team' }]}
+                size="sm"
+              />
+            )}
             <UnstyledButton className="month-chip" onClick={() => setSelectedMonth(months[0]?.value ?? selectedMonth)}>
               <IconCalendarStats size={17} />
               <Text size="sm" fw={700}>{dayjs(selectedMonth).format('MMMM YYYY')}</Text>
             </UnstyledButton>
-            <Anchor component="button" onClick={() => navigate('/worklog')} fw={700} size="sm">
-              Open worklog <IconArrowUpRight size={14} style={{ verticalAlign: 'middle' }} />
-            </Anchor>
+            <Button
+              variant="light"
+              rightSection={<IconArrowUpRight size={15} />}
+              onClick={() => navigate('/worklog')}
+            >
+              Open work log
+            </Button>
           </Group>
         )}
       />
 
+      {view === 'team' ? (
+        <TeamOverview
+          year={year}
+          month={month}
+          selectedMemberId={selectedMemberId}
+          onSelectMember={(member) => {
+            setSelectedMemberId(member.id);
+            setView('me');
+          }}
+        />
+      ) : (
+      <>
       <Group justify="space-between" align="center" className="section-toolbar">
         <div>
           <Title order={3}>Performance snapshot</Title>
@@ -151,6 +183,8 @@ export function DashboardPage() {
       <Card padding="lg" className="insight-banner">
         <Group align="flex-start" wrap="nowrap"><ThemeIcon color="cyan" variant="light" size={38} radius="md"><IconInfoCircle size={20} /></ThemeIcon><div><Text fw={800}>Keep the record complete</Text><Text size="sm" c="dimmed" mt={3}>Consistent daily entries make team capacity, overtime, and delivery reporting more reliable.</Text></div></Group>
       </Card>
+      </>
+      )}
     </Stack>
   );
 }
