@@ -230,3 +230,9 @@ frontend/*.tsbuildinfo
 # Runtime data the app writes
 /storage/
 /logs/
+/frontend/.wrangler/state/v3/cache/miniflare-CacheObject/metadata.sqlite
+/frontend/.wrangler/state/v3/observability/miniflare-wobs-trace-store/metadata.sqlite
+/frontend/.wrangler/state/v3/cache/miniflare-CacheObject/metadata.sqlite-shm
+/frontend/.wrangler/state/v3/observability/miniflare-wobs-trace-store/metadata.sqlite-shm
+/frontend/.wrangler/state/v3/cache/miniflare-CacheObject/metadata.sqlite-wal
+/frontend/.wrangler/state/v3/observability/miniflare-wobs-trace-store/metadata.sqlite-wal
