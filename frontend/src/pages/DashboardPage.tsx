@@ -43,6 +43,7 @@ export function DashboardPage() {
   const { selectedMemberId, setSelectedMemberId } = useWorkspace();
   const navigate = useNavigate();
   const [view, setView] = useState<'me' | 'team'>('me');
+  const [snapshotScope, setSnapshotScope] = useState<'month' | 'year'>('month');
   const [selectedMonth, setSelectedMonth] = useState(dayjs().format('YYYY-MM'));
   const [year, month] = selectedMonth.split('-').map(Number);
 
@@ -63,8 +64,45 @@ export function DashboardPage() {
     () => [...(worklogQuery.data ?? [])].sort((a, b) => b.log_date.localeCompare(a.log_date)).slice(0, 6),
     [worklogQuery.data],
   );
-  const completedTotal = (dashboard?.total_done ?? 0) + (dashboard?.total_in_progress ?? 0) + (currentMonth?.missing ?? 0);
-  const completion = completedTotal ? Math.round(((dashboard?.total_done ?? 0) / completedTotal) * 100) : 0;
+  const yearMissing = useMemo(
+    () => (dashboard?.months ?? []).reduce((sum, item) => sum + item.missing, 0),
+    [dashboard?.months],
+  );
+
+  const monthCompletedTotal = (currentMonth?.done ?? 0) + (currentMonth?.in_progress ?? 0) + (currentMonth?.missing ?? 0);
+  const monthCompletion = monthCompletedTotal ? Math.round(((currentMonth?.done ?? 0) / monthCompletedTotal) * 100) : 0;
+
+  const yearCompletedTotal = (dashboard?.total_done ?? 0) + (dashboard?.total_in_progress ?? 0) + yearMissing;
+  const yearCompletion = yearCompletedTotal ? Math.round(((dashboard?.total_done ?? 0) / yearCompletedTotal) * 100) : 0;
+
+  const monthName = dayjs(selectedMonth).format('MMMM');
+  const snapshot = snapshotScope === 'month'
+    ? {
+        hours: currentMonth?.total_hours,
+        hoursHelper: `${formatHours(dashboard?.total_hours)} year to date`,
+        overtime: currentMonth?.overtime_hours,
+        overtimeHelper: `${formatHours(dashboard?.total_overtime)} year to date`,
+        done: currentMonth?.done ?? 0,
+        doneHelper: `${dashboard?.total_done ?? 0} year to date`,
+        inProgress: currentMonth?.in_progress ?? 0,
+        inProgressHelper: `${dashboard?.total_in_progress ?? 0} year to date`,
+        missing: currentMonth?.missing ?? 0,
+        missingHelper: `Requires review in ${monthName}`,
+        completion: monthCompletion,
+      }
+    : {
+        hours: dashboard?.total_hours,
+        hoursHelper: `${formatHours(currentMonth?.total_hours)} in ${monthName}`,
+        overtime: dashboard?.total_overtime,
+        overtimeHelper: `${formatHours(currentMonth?.overtime_hours)} in ${monthName}`,
+        done: dashboard?.total_done ?? 0,
+        doneHelper: `${currentMonth?.done ?? 0} completed in ${monthName}`,
+        inProgress: dashboard?.total_in_progress ?? 0,
+        inProgressHelper: `${currentMonth?.in_progress ?? 0} in ${monthName}`,
+        missing: yearMissing,
+        missingHelper: `${currentMonth?.missing ?? 0} in ${monthName}`,
+        completion: yearCompletion,
+      };
   const isLoading = dashboardQuery.isLoading || worklogQuery.isLoading;
 
   return (
@@ -112,10 +150,20 @@ export function DashboardPage() {
       ) : (
       <>
       <div className="section-toolbar">
-        <Title order={3}>Performance snapshot</Title>
-        <Text size="sm" c="dimmed">
-          Year-to-date signals for {year}, with monthly figures from {dayjs(selectedMonth).format('MMMM')}.
-        </Text>
+        <div>
+          <Title order={3}>Performance snapshot</Title>
+          <Text size="sm" c="dimmed">
+            {snapshotScope === 'month'
+              ? `Signals for ${monthName} ${year}, weighed against the year to date.`
+              : `Year-to-date signals for ${year}, with monthly figures from ${monthName}.`}
+          </Text>
+        </div>
+        <SegmentedControl
+          value={snapshotScope}
+          onChange={(value) => setSnapshotScope(value as 'month' | 'year')}
+          data={[{ value: 'month', label: 'This month' }, { value: 'year', label: 'Year to date' }]}
+          size="xs"
+        />
       </div>
 
       {dashboardQuery.isError && <Alert color="red" icon={<IconInfoCircle size={18} />}>We couldn&apos;t load your dashboard yet. Refresh the page or check your session.</Alert>}
@@ -123,11 +171,11 @@ export function DashboardPage() {
       <div className="dashboard-metrics-grid">
         {isLoading ? Array.from({ length: 5 }, (_, index) => <Skeleton key={index} height={150} radius="md" />) : (
           <>
-            <MetricCard label="Hours logged" value={formatHours(dashboard?.total_hours)} helper={`${formatHours(currentMonth?.total_hours)} this month`} icon={<IconClockHour4 size={18} />} />
-            <MetricCard label="Overtime" value={formatHours(dashboard?.total_overtime)} helper={`${formatHours(currentMonth?.overtime_hours)} this month`} icon={<IconTrendingUp size={18} />} accent="cyan" />
-            <MetricCard label="Completed" value={`${dashboard?.total_done ?? 0}`} helper={`${currentMonth?.done ?? 0} completed this month`} icon={<IconCircleCheck size={18} />} accent="teal" progress={completion} />
-            <MetricCard label="In progress" value={`${dashboard?.total_in_progress ?? 0}`} helper={`${currentMonth?.in_progress ?? 0} this month`} icon={<IconProgress size={18} />} accent="grape" />
-            <MetricCard label="Missing days" value={`${currentMonth?.missing ?? 0}`} helper="Requires review this month" icon={<IconAlertTriangle size={18} />} accent="orange" />
+            <MetricCard label="Hours logged" value={formatHours(snapshot.hours)} helper={snapshot.hoursHelper} icon={<IconClockHour4 size={18} />} />
+            <MetricCard label="Overtime" value={formatHours(snapshot.overtime)} helper={snapshot.overtimeHelper} icon={<IconTrendingUp size={18} />} accent="cyan" />
+            <MetricCard label="Completed" value={`${snapshot.done}`} helper={snapshot.doneHelper} icon={<IconCircleCheck size={18} />} accent="teal" progress={snapshot.completion} />
+            <MetricCard label="In progress" value={`${snapshot.inProgress}`} helper={snapshot.inProgressHelper} icon={<IconProgress size={18} />} accent="grape" />
+            <MetricCard label="Missing days" value={`${snapshot.missing}`} helper={snapshot.missingHelper} icon={<IconAlertTriangle size={18} />} accent="orange" />
           </>
         )}
       </div>

@@ -76,11 +76,23 @@ export function WorklogPage() {
   const saveMutation = useMutation({
     mutationFn: async (draft: WorklogDraft) => {
       if (!selectedMemberId) return;
+      if (!activeEntry && draft.range_dates && draft.range_dates.length > 1) {
+        // Bulk create: same entry, one row per date in the selected range.
+        for (const log_date of draft.range_dates) {
+          await worklogsApi.create(toPayload(selectedMemberId, { ...draft, log_date }));
+        }
+        return;
+      }
       const payload = toPayload(selectedMemberId, draft);
       if (activeEntry) await worklogsApi.update(activeEntry.id, payload);
       else await worklogsApi.create(payload);
     },
-    onSuccess: () => { notifySuccess('Worklog saved'); setPanelOpen(false); refresh(); },
+    onSuccess: (_data, draft) => {
+      const count = !activeEntry && draft.range_dates && draft.range_dates.length > 1 ? draft.range_dates.length : 1;
+      notifySuccess(count > 1 ? `${count} worklog entries saved` : 'Worklog saved');
+      setPanelOpen(false);
+      refresh();
+    },
     onError: (error) => notifyError(error, 'Unable to save this worklog.'),
   });
 

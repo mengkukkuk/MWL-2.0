@@ -60,6 +60,14 @@ export function prettyDate(isoDate: string): string {
   return dayjs(isoDate).format('ddd D MMM');
 }
 
+/** Every calendar day from `startIso` to `endIso`, inclusive. Empty if the range is inverted. */
+export function datesInRange(startIso: string, endIso: string): string[] {
+  const start = dayjs(startIso);
+  const span = dayjs(endIso).diff(start, 'day');
+  if (span < 0) return [];
+  return Array.from({ length: span + 1 }, (_, i) => start.add(i, 'day').format(DATE_FMT));
+}
+
 /** Decimal hours -> "7h 30m". Hours arrive from the server as floats. */
 export function formatHours(hours: number | null | undefined): string {
   if (!hours) return '—';

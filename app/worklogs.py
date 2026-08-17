@@ -734,8 +734,7 @@ def get_dashboard():
         'total_OT3':   round(total_ot3, 2),
         'avg_monthly_hours': round(total_hours / 12, 2),
         'total_done': total_done,
-        #'total_in_progress': total_in_progress,
-        'total_in_progress': total_man_day,
+        'total_in_progress': total_in_progress,
         'total_man_day': round(total_man_day, 2),
         'months': months,
     })
